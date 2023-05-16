@@ -1,3 +1,4 @@
+import json
 import os
 
 import cv2
@@ -20,6 +21,15 @@ hp_max = (49,255,249)
 
 lost_hp = (52,59,65)
 lost_hp2 = (56,64,71)
+
+def read_json(path):
+    with open(f'{path}', 'r') as openfile:
+        json_object = json.load(openfile)
+    return json_object
+
+def save_json(path, dict):
+    with open(f"{path}", "w") as outfile:
+        json.dump(dict, outfile)
 
 class Cord:
     def __init__(self,x1, x2, y1, y2):
@@ -169,6 +179,7 @@ def read_team_hp(image):
 
 
 if __name__ == '__main__':
+    jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
     pass
     # time.sleep(1)
     #
