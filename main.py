@@ -179,8 +179,19 @@ def read_team_hp(image):
 
 
 if __name__ == '__main__':
-    jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
+    # jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
     pass
+    image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
+    cord = Cord(60,315,75,330)
+    cropped = crop(image, cord)
+    cv2.imshow("name", cropped)
+    cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
+    # threshold = cv2.threshold()
+    blue_cropped = cropped[np.where(cropped==(0,198,255))]==(0,0,0)
+    ret, thresh1 = cv2.threshold(cropped_gray, 150, 255, cv2.THRESH_BINARY)
+    cv2.imshow("thresh", thresh1)
+    cv2.imshow("blue", blue_cropped)
+    cv2.waitKey(0)
     # time.sleep(1)
     #
     # x = 100
