@@ -1,5 +1,6 @@
 import json
 import os
+from copy import deepcopy
 
 import cv2
 import numpy as np
@@ -181,16 +182,66 @@ def read_team_hp(image):
 if __name__ == '__main__':
     # jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
     pass
+    # image = get_image()
     image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
     cord = Cord(60,315,75,330)
     cropped = crop(image, cord)
     cv2.imshow("name", cropped)
     cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
+    # cv2.imwrite(f"{os.getcwd()}\\test_images\\locked_enemy.png", image)
     # threshold = cv2.threshold()
-    blue_cropped = cropped[np.where(cropped==(0,198,255))]==(0,0,0)
+    blue_cropped = deepcopy(cropped)
+
+    # blue_cropped[np.all(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
+    # blue_cropped[np.all(blue_cropped == (255, 198, 0), axis=2)] = (255, 255, 255)
+    # print((200 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] < 256) &
+    #       (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 256) &
+    #       (0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
+    player_mask = ((200 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] <= 256) &
+          (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 256) &
+          (0 <= blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
+
+    enemy_mask = ((85 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] <= 120) &
+                   (80 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 100) &
+                   (190 <= blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 256))
+    # maks = np.where(mask==True,255,0)
+    binary_image = np.where(player_mask, 255, 0).astype(np.uint8)
+    binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
+    print(player_mask)
+    # blue_cropped = blue_cropped[blue_cropped[:,:,0]]
+    # blue_cropped[~np.all(
+    #     (blue_cropped[:, :, 0] > 230) & (150 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 250) & (
+    #                 0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 70), axis=1)] = (0, 0, 0)
+    # w, h, _ = blue_cropped.shape
+    # print(w, h)
+    # print(blue_cropped[0,0])
+    # for i in range(w):
+    #     for j in range(h):
+    #         print(f"{blue_cropped[j, i]} == (0, 198, 255)")
+    #         if np.all(blue_cropped[j, i] == [255, 198, 0]):
+    #             print(f"{blue_cropped[j, i]} == (0, 198, 255)")
+    #             blue_cropped[j, i] = (0,0,0)
+    #         else:
+    #             blue_cropped[j, i] = (255, 255, 255)
+
+    # blue_cropped = np.where(np.all(blue_cropped == (0, 198, 255), axis=2, keepdims=True), (255, 255, 255), blue_cropped)
+
+    # blue_cropped[np.where(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
+
+    # for rgb in blue_cropped:
+    #     if np.all(rgb == (0, 198, 255)):
+    #         rgb = (255, 255, 255)
+    #     else:
+    #         rgb = (0, 0, 0)
+
+    # blue_cropped = blue_cropped[np.where(blue_cropped==(0,198,255),255,0)]
+    # print(blue_cropped)
+
     ret, thresh1 = cv2.threshold(cropped_gray, 150, 255, cv2.THRESH_BINARY)
     cv2.imshow("thresh", thresh1)
     cv2.imshow("blue", blue_cropped)
+    cv2.imshow("binary", binary_image)
+    cv2.imshow("binary2", binary_image2)
     cv2.waitKey(0)
     # time.sleep(1)
     #
