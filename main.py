@@ -63,6 +63,12 @@ star_map_dict = {"Herta_Space_Station": Cord(475,476,710,711),
                  "Jarilo-VI": Cord(1350,1351,340,341),
                  "The_Xianzhou_Luofu": Cord(2030,2031,1120,1121)}
 
+Herta_Space_Station_dict = {"parlor_car": Cord(2431,2432,309,310),
+                            "master_control_zone": Cord(2443,2444,437,438),
+                            "base_zone": Cord(2440,2441,570,571),
+                            "storage_zone": Cord(2440,2441,690,691),
+                            "supply_zone": Cord(2440,2441,820,821)}
+
 def crop(image, cord):
     cropped = image[cord.y1:cord.y2, cord.x1: cord.x2]
     return cropped
@@ -163,58 +169,59 @@ def read_team_hp(image):
 
 
 if __name__ == '__main__':
-    time.sleep(1)
-
-    x = 100
-    y = 100
-    pyautogui.moveTo(x, y)
-    pyautogui.click()
-    time.sleep(4)
-    turn_around()
-    out = True
-    h = 0
-    while out:
-        time.sleep(0.5)
-        image = get_image()
-        battle = check_if_battle(image)
-        if battle:
-            out= False
-            print("started battle")
-            break
-        else:
-            print("not in battle")
-            przod(0.5)
-        h+=1
-        if h == 100:
-            out = False
-            raise Exception("ERROR")
-
-
-    start_autobattle()
-
-    in_battle = True
-    while in_battle:
-        time.sleep(10)
-        image = get_image()
-        battle = check_if_endbattle(image)
-        if battle:
-            in_battle = False
-            print("ended battle")
-            break
-        else:
-            print("still in battle")
-        h += 1
-        if h == 100:
-            out = False
-            raise Exception("ERROR")
-
-    print("END")
-
-    # read_team_hp(image)
-    # read_hero_hp(image, 1)
-    image = get_image()
-    path = f"{os.getcwd()}\\test_images"
-    cv2.imwrite(f"{path}\\star_map_image.png", image)
+    pass
+    # time.sleep(1)
+    #
+    # x = 100
+    # y = 100
+    # pyautogui.moveTo(x, y)
+    # pyautogui.click()
+    # time.sleep(4)
+    # turn_around()
+    # out = True
+    # h = 0
+    # while out:
+    #     time.sleep(0.5)
+    #     image = get_image()
+    #     battle = check_if_battle(image)
+    #     if battle:
+    #         out= False
+    #         print("started battle")
+    #         break
+    #     else:
+    #         print("not in battle")
+    #         przod(0.5)
+    #     h+=1
+    #     if h == 100:
+    #         out = False
+    #         raise Exception("ERROR")
+    #
+    #
+    # start_autobattle()
+    #
+    # in_battle = True
+    # while in_battle:
+    #     time.sleep(10)
+    #     image = get_image()
+    #     battle = check_if_endbattle(image)
+    #     if battle:
+    #         in_battle = False
+    #         print("ended battle")
+    #         break
+    #     else:
+    #         print("still in battle")
+    #     h += 1
+    #     if h == 100:
+    #         out = False
+    #         raise Exception("ERROR")
+    #
+    # print("END")
+    #
+    # # read_team_hp(image)
+    # # read_hero_hp(image, 1)
+    # image = get_image()
+    # path = f"{os.getcwd()}\\test_images"
+    # cv2.imwrite(f"{path}\\star_map_image.png", image)
     # time.sleep(3)
     # x_offset = 50
     # y_offset = 50
