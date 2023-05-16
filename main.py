@@ -24,7 +24,7 @@ lost_hp2 = (56,64,71)
 class Cord:
     def __init__(self,x1, x2, y1, y2):
         if x1 is None or x2 is None or y1 is None or x2 is None:
-            raise  Exception("wrong coordinates")
+            raise Exception("wrong coordinates")
         else:
             self.x1 = int(x1)
             self.x2 = int(x2)
