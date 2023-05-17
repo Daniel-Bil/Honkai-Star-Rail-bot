@@ -93,5 +93,15 @@ def turn_left():
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, -1543, 0, 0, 0)
     time.sleep(0.1)
 
+
+def turn(value):
+    deg = 3085/180.
+    turn_value = deg * value
+    value = int(turn_value)
+    time.sleep(0.2)
+    win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, value, 0, 0, 0)
+    time.sleep(0.1)
+
+
 def check_fight():
     pass

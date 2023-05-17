@@ -1,6 +1,8 @@
 import json
+import math
 import os
 from copy import deepcopy
+from typing import Union
 
 import cv2
 import numpy as np
@@ -11,7 +13,7 @@ import keyboard
 import win32api, win32con
 from pynput.mouse import Button, Controller
 
-from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle
+from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, turn
 
 IMAGE_WIDTH: int = 2560
 IMAGE_HEIGHT: int = 1440
@@ -31,9 +33,63 @@ def read_json(path):
 def save_json(path, dict):
     with open(f"{path}", "w") as outfile:
         json.dump(dict, outfile)
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def calculate_distance(self, point: Union[np.ndarray, list, 'Point']):
+        if isinstance(point, list) or isinstance(point, np.ndarray):
+            if self.x == point[0] and self.y == point[1]:
+                distance = 0
+            else:
+                x_distance = point[0]-self.x
+                y_distance = point[1]-self.y
+                distance = np.sqrt((x_distance**2 + y_distance**2))
+
+        elif isinstance(point, Point):
+            if self.x == point.x and self.y == point.y:
+                distance = 0
+            else:
+                x_distance = point[0] - self.x
+                y_distance = point[1] - self.y
+                distance = np.sqrt((x_distance ** 2 + y_distance ** 2))
+        else:
+            raise Exception("Point calculate distance wrong point type")
+        return distance
+
+    def calculate_angle(self, point: Union[np.ndarray, list, 'Point']):
+
+        v1 = point[1] - self.y
+        v2 = point[0] - self.x
+        print(f"v1 = {v1} v2 = {v2}, point = {point}   self = {self.x, self.y}")
+        angle_rad = math.atan2(point[1] - self.y, point[0] - self.x)
+        angle_deg = math.degrees(angle_rad)
+        return angle_deg
+        # if isinstance(point, list) or isinstance(point, np.ndarray):
+        #     if self.x == point[0] and self.y == point[1]:
+        #         raise Exception("no angle between the same point")
+        #     else:
+        #         if self.x == point[0] and not self.y == point[1]:
+        #             pass
+        #         elif not self.x == point[0] and self.y == point[1]:
+        #             pass
+        #         else:
+        #             pass
+        #
+        # elif isinstance(point, Point):
+        #     if self.x == point.x and self.y == point.y:
+        #         angle = 0
+        #     else:
+        #         x_distance = point[0] - self.x
+        #         y_distance = point[1] - self.y
+        #         angle = np.sqrt((x_distance ** 2 + y_distance ** 2))
+        # else:
+        #     raise Exception("Point calculate distance wrong point type")
+        # return angle
 
 class Cord:
-    def __init__(self,x1, x2, y1, y2):
+    def __init__(self, x1, x2, y1, y2):
         if x1 is None or x2 is None or y1 is None or x2 is None:
             raise Exception("wrong coordinates")
         else:
@@ -180,10 +236,20 @@ def read_team_hp(image):
 
 
 def calculate_orientation(player, enemy, image):
+    kernel = (2,2)
 
-
+    print(f"img {image.shape}")
+    player = cv2.dilate(player,kernel)
+    # player = cv2.dilate(player,kernel)
+    # player = cv2.dilate(player,kernel)
+    # player = cv2.dilate(player,kernel)
+    # player = cv2.dilate(player,kernel)
+    # player = cv2.dilate(player,kernel)
+    # player = cv2.dilate(player,kernel)
     contours, _ = cv2.findContours(player, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours2, _ = cv2.findContours(enemy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     image_copy = deepcopy(image)
+
 
     cnt = contours[0]
     M = cv2.moments(cnt)
@@ -194,22 +260,104 @@ def calculate_orientation(player, enemy, image):
     rect = cv2.minAreaRect(cnt)
     box = cv2.boxPoints(rect)
     box = np.int0(box)
-    cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
+
+    print(cx)
+    print(cy)
+
+    print(box)
+    # cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
+    # cv2.drawContours(image_copy, [hull], 0, (255, 0, 0), 3)
 
     cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 3)
+    cv2.drawContours(image_copy, contours2, -1, (0, 255, 0), 3)
 
-    cv2.imshow("binary", player)
-    cv2.imshow("binary2", enemy)
-    cv2.imshow("image", image_copy)
-    cv2.waitKey(0)
+    # cv2.circle(image_copy, box[0], radius=5, color=(255, 0, 0), thickness=-1)
+    # cv2.circle(image_copy, box[1], radius=5, color=(0, 255, 255), thickness=-1)
+    # cv2.circle(image_copy, box[2], radius=5, color=(0, 0, 0), thickness=-1)
+    # cv2.circle(image_copy, box[3], radius=5, color=(0, 0, 255), thickness=-1)
+    cv2.circle(image_copy, (cx,cy), radius=5, color=(127, 0, 204), thickness=-1)
+    print(player.shape)
+    reshaped_player = np.expand_dims(player, axis=2)
+    reshaped_enemy = np.expand_dims(enemy, axis=2)
+    player_rgb = np.repeat(reshaped_player, 3, axis=2)
+    enemy_rgb = np.repeat(reshaped_enemy, 3, axis=2)
+    place_holder1 = []
+    point = Point(cx, cy)
+    for i, b in enumerate(contours[0]):
+        # print(b)
+        b = b[0]
+
+        distance = point.calculate_distance(b)
+        # print(f"{i}: {distance}")
+        place_holder1.append((distance, b))
+
+    sorted_data = sorted(place_holder1, key=lambda x: x[0])
+
+    cv2.circle(image_copy, sorted_data[0][1], radius=5, color=(0, 0, 0), thickness=-1)
+    c_i = np.concatenate((cv2.resize(player_rgb,(700,700)),cv2.resize(enemy_rgb,(700,700)),cv2.resize(image_copy,(700,700))),axis=1)
+
+    cv2.imshow("all", c_i)
+    w, h, c = image.shape
+    point2 = Point(w // 2, h // 2)
+    print()
+    print(point.calculate_angle([w//2, 10]))
+    print(point.calculate_angle([w//2, 200]))
+    print(point.calculate_angle([10, h//2]))
+    print(point.calculate_angle([200, h//2]))
+    # print(point.calculate_angle())
+
+
+    print(contours2)
+    # if len(contours2) == 1:
+    cnt2 = contours2[0]
+    # else:
+    #     cnt2 = contours2[0]
+    M2 = cv2.moments(cnt2)
+    print(M2)
+    c1x = int(M2['m10'] / M2['m00'])
+    c1y = int(M2['m01'] / M2['m00'])
+
+    point3 = Point(c1x, c1y)
+    point4 = Point(*sorted_data[0][1])
+    print(point4.calculate_angle([point2.x, point2.y]))
+    angle = point.calculate_angle(sorted_data[0][1])
+    print(angle)
+    angle2 = point2.calculate_angle([point3.x, point3.y])
+    print(angle2)
+
+    angle_xd1 = point4.calculate_angle([point2.x, point2.y])
+    angle_xd2 = angle2
+    print(angle_xd1)
+    print(angle_xd2)
+    f_a = -((180+angle_xd1)+angle_xd2)
+    print(f"f_a = {f_a}")
+
+    # turn_angle = int(3085//f_a)
+    turn(f_a)
+
+    # cv2.circle(image_copy, sorted_data[1][1], radius=5, color=(255, 255, 255), thickness=-1)
+
+
+
+    cv2.imshow("2 closest", image_copy)
+
+
+
+    # cv2.waitKey(0)
+
+
+
+
 
 
 if __name__ == '__main__':
     # jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
-    pass
-    # image = get_image()
-    image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
-    cord = Cord(60, 315, 75, 330)
+    time.sleep(4)
+    przod(0.2)
+    time.sleep(1)
+    image = get_image()
+    # image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
+    cord = Cord(63, 312, 77, 326)
     cropped = crop(image, cord)
     # cv2.imshow("name", cropped)
     cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
@@ -226,8 +374,8 @@ if __name__ == '__main__':
                     (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 256) &
                     (0 <= blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
 
-    enemy_mask = ((85 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] <= 120) &
-                   (80 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 100) &
+    enemy_mask = ((40 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] <= 120) &
+                   (40 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 100) &
                    (190 <= blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 256))
     # maks = np.where(mask==True,255,0)
     binary_image = np.where(player_mask, 255, 0).astype(np.uint8)
@@ -286,12 +434,13 @@ if __name__ == '__main__':
     # cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
     #
     # cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 3)
-    # cv2.imshow("binary_image_copy", image_copy)
-
+    # cv2.imshow("binary_image_copy", binary_image2)
+    # cv2.waitKey(0)
 
 
     calculate_orientation(binary_image, binary_image2, image_copy)
-
+    time.sleep(0.5)
+    przod(0.2)
     # print(cx)
     # print(cy)
     # print(box)
