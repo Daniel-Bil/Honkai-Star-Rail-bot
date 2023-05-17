@@ -179,14 +179,39 @@ def read_team_hp(image):
         print(f"hero nr {i+1} hp = {hp}%")
 
 
+def calculate_orientation(player, enemy, image):
+
+
+    contours, _ = cv2.findContours(player, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    image_copy = deepcopy(image)
+
+    cnt = contours[0]
+    M = cv2.moments(cnt)
+    print(M)
+    cx = int(M['m10'] / M['m00'])
+    cy = int(M['m01'] / M['m00'])
+
+    rect = cv2.minAreaRect(cnt)
+    box = cv2.boxPoints(rect)
+    box = np.int0(box)
+    cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
+
+    cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 3)
+
+    cv2.imshow("binary", player)
+    cv2.imshow("binary2", enemy)
+    cv2.imshow("image", image_copy)
+    cv2.waitKey(0)
+
+
 if __name__ == '__main__':
     # jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
     pass
     # image = get_image()
     image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
-    cord = Cord(60,315,75,330)
+    cord = Cord(60, 315, 75, 330)
     cropped = crop(image, cord)
-    cv2.imshow("name", cropped)
+    # cv2.imshow("name", cropped)
     cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
     # cv2.imwrite(f"{os.getcwd()}\\test_images\\locked_enemy.png", image)
     # threshold = cv2.threshold()
@@ -198,8 +223,8 @@ if __name__ == '__main__':
     #       (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 256) &
     #       (0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
     player_mask = ((200 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] <= 256) &
-          (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 256) &
-          (0 <= blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
+                    (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 256) &
+                    (0 <= blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
 
     enemy_mask = ((85 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] <= 120) &
                    (80 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] <= 100) &
@@ -238,11 +263,39 @@ if __name__ == '__main__':
     # print(blue_cropped)
 
     ret, thresh1 = cv2.threshold(cropped_gray, 150, 255, cv2.THRESH_BINARY)
-    cv2.imshow("thresh", thresh1)
-    cv2.imshow("blue", blue_cropped)
-    cv2.imshow("binary", binary_image)
-    cv2.imshow("binary2", binary_image2)
-    cv2.waitKey(0)
+
+
+
+    # cv2.imshow("thresh", thresh1)
+    # cv2.imshow("blue", blue_cropped)
+    # cv2.imshow("binary", binary_image)
+    # cv2.imshow("binary2", binary_image2)
+
+    contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    image_copy = deepcopy(blue_cropped)
+
+    # cnt = contours[0]
+    # M = cv2.moments(cnt)
+    # print(M)
+    # cx = int(M['m10'] / M['m00'])
+    # cy = int(M['m01'] / M['m00'])
+    #
+    # rect = cv2.minAreaRect(cnt)
+    # box = cv2.boxPoints(rect)
+    # box = np.int0(box)
+    # cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
+    #
+    # cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 3)
+    # cv2.imshow("binary_image_copy", image_copy)
+
+
+
+    calculate_orientation(binary_image, binary_image2, image_copy)
+
+    # print(cx)
+    # print(cy)
+    # print(box)
+    # cv2.waitKey(0)
     # time.sleep(1)
     #
     # x = 100
