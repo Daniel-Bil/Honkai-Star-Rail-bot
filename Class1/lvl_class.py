@@ -43,3 +43,9 @@ class LVL:
         for i, move in enumerate(self.sequence_of_moves):
             self.handle_move(move)
 
+    def teleport_calyx(self, cord):
+        pass
+        # 1 Open Map
+        # Click on calyx
+        # Teleport
+

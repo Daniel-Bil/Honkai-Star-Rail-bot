@@ -29,6 +29,14 @@ def press_map():
 
     keyboard.release('left alt')
 
+def press_map2():
+    time.sleep(0.1)
+    keyboard.press('m')
+    time.sleep(0.1)
+    keyboard.release('m')
+    time.sleep(0.1)
+
+
 def przod(run_time=0.1):
     time.sleep(0.1)
     keyboard.press('w')
