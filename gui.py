@@ -9,6 +9,8 @@ import keyboard
 import win32api, win32con
 from pynput.mouse import Button, Controller
 
+
+
 def sprint():
     keyboard.press('left shift')
     time.sleep(0.1)
@@ -44,26 +46,26 @@ def przod(run_time=0.1):
     keyboard.release('w')
     time.sleep(0.1)
 
-def tyl():
+def tyl(run_time=0.1):
     time.sleep(0.1)
     keyboard.press('s')
-    time.sleep(0.1)
+    time.sleep(run_time)
     keyboard.release('s')
     time.sleep(0.1)
 
-def right():
+def right(run_time=0.1):
 
     time.sleep(0.1)
     keyboard.press('d')
-    time.sleep(0.1)
+    time.sleep(run_time)
     keyboard.release('d')
     time.sleep(0.1)
 
-def left():
+def left(run_time=0.1):
 
     time.sleep(0.1)
     keyboard.press('a')
-    time.sleep(0.1)
+    time.sleep(run_time)
     keyboard.release('a')
     time.sleep(0.1)
 
@@ -78,12 +80,12 @@ def start_autobattle():
     time.sleep(0.1)
 
 
-def click_cords(cord):
-    time.sleep(0.1)
+def click_cords(cord, slow=0.1):
+    time.sleep(slow)
     mouse = Controller()
     mouse.position = (cord.x1, cord.y1)
     mouse.click(Button.left)
-    time.sleep(0.1)
+    time.sleep(slow)
 
 
 def turn_around():
@@ -111,5 +113,5 @@ def turn(value):
     time.sleep(0.1)
 
 
-def check_fight():
-    pass
+
+

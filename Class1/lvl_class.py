@@ -9,14 +9,16 @@ import keyboard
 import win32api, win32con
 from pynput.mouse import Button, Controller
 
-from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle
+from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, press_map2
 import json
 
 class LVL:
     def __init__(self):
 
-        self.sequence_of_moves = ["move1", "move2"]
-        self.number_of_enemies = 10
+        self.sequence_of_moves = []
+        self.number_of_enemies = 0
+        self.planet = "None"
+        self.room = "None"
 
 
     def setup_lvl(self):
@@ -41,7 +43,7 @@ class LVL:
 
     def play_lvl(self):
         for i, move in enumerate(self.sequence_of_moves):
-            self.handle_move(move)
+           move
 
     def teleport_calyx(self, cord):
         pass

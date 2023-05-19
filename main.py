@@ -13,8 +13,12 @@ import keyboard
 import win32api, win32con
 from pynput.mouse import Button, Controller
 
-from dictionaries import in_battle_skillpoint_dict, out_of_battle_cord_dict
-from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, turn
+from Class1.lvl_class import LVL
+from dictionaries import in_battle_skillpoint_dict, out_of_battle_cord_dict, Cord, Herta_Space_Station_dict, \
+    Storage_Zone_dict
+from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, turn, \
+    press_map2, click_cords
+from utilities import show_images
 
 IMAGE_WIDTH: int = 2560
 IMAGE_HEIGHT: int = 1440
@@ -26,6 +30,39 @@ hp_max = (49,255,249)
 lost_hp = (52,59,65)
 lost_hp2 = (56,64,71)
 
+def check_fight(timer=10):
+    h=0
+    while True:
+
+        time.sleep(5)
+        image = get_image()
+        battle = check_if_battle(image)
+        if battle:
+            time.sleep(1)
+            start_autobattle()
+            time.sleep(1)
+            print("started autobattle")
+            break
+        if h > timer:
+            print("no fight found")
+            break
+        h += 1
+        print("waiting for battle")
+
+def check_end_fight():
+    h = 0
+    while True:
+        h+=1
+        time.sleep(5)
+        image = get_image()
+        battle = check_if_endbattle(image)
+
+        if battle:
+
+            time.sleep(1)
+            print("battle finished")
+            break
+        print("still in battle")
 
 def create_mask(image, color):
     if color == "player":
@@ -161,12 +198,18 @@ def check_if_endbattle(image):
         return False
 
 
-def get_image(convert = True):
-   im = PIL.ImageGrab.grab()
-   image = np.array(im)
-   if convert:
-       image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
-   return image
+def get_image(convert=True, place="all"):
+    if place == "all":
+        im = PIL.ImageGrab.grab()
+    elif place == "map":
+        im = PIL.ImageGrab.grab((63, 77, 312, 326))
+    else:
+        raise Exception("XD")
+
+    image = np.array(im)
+    if convert:
+       image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    return image
 
 
 def read_hero_hp(image, nr):
@@ -267,7 +310,7 @@ def calculate_orientation(player, enemy, image):
     cv2.circle(image_copy, sorted_data[0][1], radius=5, color=(0, 0, 0), thickness=-1)
     c_i = np.concatenate((cv2.resize(player_rgb,(700,700)),cv2.resize(enemy_rgb,(700,700)),cv2.resize(image_copy,(700,700))),axis=1)
 
-    cv2.imshow("all", c_i)
+    # cv2.imshow("all", c_i)
     w, h, c = image.shape
     point2 = Point(w // 2, h // 2)
     print()
@@ -296,10 +339,10 @@ def calculate_orientation(player, enemy, image):
     angle2 = point2.calculate_angle([point3.x, point3.y])
     print(angle2)
 
-    angle_xd1 = point4.calculate_angle([point2.x, point2.y])
+    angle_xd1 = angle
     angle_xd2 = angle2
-    print(angle_xd1)
-    print(angle_xd2)
+    print(f"hero = {angle_xd1}")
+    print(f"enemy = {angle_xd2}")
     f_a = -((180+angle_xd1)+angle_xd2)
     print(f"f_a = {f_a}")
 
@@ -307,127 +350,192 @@ def calculate_orientation(player, enemy, image):
     turn(f_a)
 
     cv2.circle(image_copy, sorted_data[1][1], radius=5, color=(255, 255, 255), thickness=-1)
+    cv2.imwrite("XD.png", image_copy)
+
+
+    # cv2.imshow("2 closest", image_copy)
 
 
 
-    cv2.imshow("2 closest", image_copy)
+    # cv2.waitKey(0)
 
 
-
-    cv2.waitKey(0)
-
-
-
-
+def find_enemy():
+    image = get_image()
+    cord = Cord(63, 312, 77, 326)
+    cropped = crop(image, cord)
+    blue_cropped = deepcopy(cropped)
+    player_mask = create_mask(blue_cropped, "player")
+    enemy_mask = create_mask(blue_cropped, "enemy")
+    binary_image = np.where(player_mask, 255, 0).astype(np.uint8)
+    binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
+    image_copy = deepcopy(blue_cropped)
+    calculate_orientation(binary_image, binary_image2, image_copy)
 
 
 if __name__ == '__main__':
+    time.sleep(1)
+
+    img = get_image(place = "map")
+    show_images(img)
+
+
+    # click_cords(Cord(200,201,200,201))
+    # time.sleep(1)
+    # print("start")
+    # #Create lvl1
+    # lvl = LVL()
+    # lvl.number_of_enemies = 3
+    # lvl.planet = "Herta_Space_Station"
+    # lvl.room = "storage_zone"
+    #
+    # lvl.sequence_of_moves = [
+    #                          press_map2(),
+    #                          click_cords(Storage_Zone_dict["Courtyard"], slow=2),
+    #                          click_cords(Cord(1570, 1571, 1007, 1008), slow=2),
+    #                          click_cords(Cord(2341, 2342, 1299, 1300), slow=4)]
+
+    # [turn(-10),
+    #  przod(4.8),
+    #  find_enemy(),
+    #  przod(5),
+    #  click_cords(Cord(1200, 1201, 1001, 1002)),
+    #  check_fight(1),
+    #  check_end_fight(),
+    #  press_map2(),
+    #  click_cords(Storage_Zone_dict["Courtyard"], slow=2),
+    #  click_cords(Cord(1570, 1571, 1007, 1008), slow=2),
+    #  click_cords(Cord(2341, 2342, 1299, 1300), slow=4)]
+
+
+                            # press_map2(),
+                            #  click_cords(Herta_Space_Station_dict[lvl.room], slow=2),
+                            #  click_cords(Storage_Zone_dict["Calyx (Crimson): Bud of Destruction"], slow=2),
+                            #  click_cords(Cord(2341, 2342, 1299, 1300), slow=4),
+                            #  print("teleported to storage zone"),
+                            #  tyl(6.5),
+                            #  left(3.3),
+                            #  przod(6.7),
+                            #  left(2.3),
+                            #  tyl(4.2),
+                            #  check_fight(1),
+                            #  check_end_fight(),
+                            #  press_map2(),
+                            #  click_cords(Storage_Zone_dict["Outside_the_Control_Center"], slow=2),
+                            #  click_cords(Cord(2341, 2342, 1299, 1300), slow=4),
+                            #  find_enemy(),
+                            #  przod(2),
+                            #  check_fight(5),
+                            #  check_end_fight()],
+
+    # lvl.sequence_of_moves = [press_map2(),
+    #                          click_cords(Herta_Space_Station_dict[lvl.room],slow=2),
+    #                          click_cords(Storage_Zone_dict["Calyx (Crimson): Bud of Destruction"],slow=2),
+    #                          click_cords(Cord(2341,2342,1299,1300),slow=4),
+    #                          print("teleported to storage zone"),
+    #                          tyl(6.5),
+    #                          left(3.3),
+    #                          przod(6.7),
+    #                          left(2.3),
+    #                          tyl(4.2),
+    #                          check_fight(1),
+    #                          check_end_fight(),
+    #                          press_map2(),
+    #                          click_cords(Storage_Zone_dict["Outside_the_Control_Center"],slow=2),
+    #                          click_cords(Cord(2341,2342,1299,1300),slow=4),
+    #                          find_enemy(),
+    #                          przod(2),
+    #                          check_fight(5),
+    #                          check_end_fight()]
+    print("END PROGRAM")
+    # lvl.play_lvl()
+    # time.sleep(1)
+    # click_cords(Cord(200,201,200,201))
+    #
+    #
+    # tyl(6.5)
+    # turn_around()
+
+
+
+
+
+
+
+
+
+
     # jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
     # time.sleep(4)
     # przod(0.2)
     # time.sleep(1)
     # image = get_image()
-    image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
-    cord = Cord(63, 312, 77, 326)
-    cropped = crop(image, cord)
-    # cv2.imshow("name", cropped)
-    cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
-    # cv2.imwrite(f"{os.getcwd()}\\test_images\\locked_enemy.png", image)
-    # threshold = cv2.threshold()
-    blue_cropped = deepcopy(cropped)
-
-    # blue_cropped[np.all(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
-    # blue_cropped[np.all(blue_cropped == (255, 198, 0), axis=2)] = (255, 255, 255)
-    # print((200 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] < 256) &
-    #       (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 256) &
-    #       (0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
-
-
-    player_mask = create_mask(blue_cropped, "player")
-    enemy_mask = create_mask(blue_cropped, "enemy")
-
-    binary_image = np.where(player_mask, 255, 0).astype(np.uint8)
-    binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
-    print(player_mask)
-    # blue_cropped = blue_cropped[blue_cropped[:,:,0]]
-    # blue_cropped[~np.all(
-    #     (blue_cropped[:, :, 0] > 230) & (150 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 250) & (
-    #                 0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 70), axis=1)] = (0, 0, 0)
-    # w, h, _ = blue_cropped.shape
-    # print(w, h)
-    # print(blue_cropped[0,0])
-    # for i in range(w):
-    #     for j in range(h):
-    #         print(f"{blue_cropped[j, i]} == (0, 198, 255)")
-    #         if np.all(blue_cropped[j, i] == [255, 198, 0]):
-    #             print(f"{blue_cropped[j, i]} == (0, 198, 255)")
-    #             blue_cropped[j, i] = (0,0,0)
-    #         else:
-    #             blue_cropped[j, i] = (255, 255, 255)
-
-    # blue_cropped = np.where(np.all(blue_cropped == (0, 198, 255), axis=2, keepdims=True), (255, 255, 255), blue_cropped)
-
-    # blue_cropped[np.where(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
-
-    # for rgb in blue_cropped:
-    #     if np.all(rgb == (0, 198, 255)):
-    #         rgb = (255, 255, 255)
-    #     else:
-    #         rgb = (0, 0, 0)
-
-    # blue_cropped = blue_cropped[np.where(blue_cropped==(0,198,255),255,0)]
-    # print(blue_cropped)
-
-    ret, thresh1 = cv2.threshold(cropped_gray, 150, 255, cv2.THRESH_BINARY)
-
-
-
-
-
-    contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    image_copy = deepcopy(blue_cropped)
-
-
-
-
-    calculate_orientation(binary_image, binary_image2, image_copy)
-
-    # while out:
-    #     time.sleep(0.5)
-    #     image = get_image()
-    #     battle = check_if_battle(image)
-    #     if battle:
-    #         out= False
-    #         print("started battle")
-    #         break
-    #     else:
-    #         print("not in battle")
-    #         przod(0.5)
-    #     h+=1
-    #     if h == 100:
-    #         out = False
-    #         raise Exception("ERROR")
+    # image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
+    # cord = Cord(63, 312, 77, 326)
+    # cropped = crop(image, cord)
+    # # cv2.imshow("name", cropped)
+    # cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
+    # # cv2.imwrite(f"{os.getcwd()}\\test_images\\locked_enemy.png", image)
+    # # threshold = cv2.threshold()
+    # blue_cropped = deepcopy(cropped)
+    #
+    # # blue_cropped[np.all(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
+    # # blue_cropped[np.all(blue_cropped == (255, 198, 0), axis=2)] = (255, 255, 255)
+    # # print((200 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] < 256) &
+    # #       (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 256) &
+    # #       (0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
     #
     #
-    # start_autobattle()
+    # player_mask = create_mask(blue_cropped, "player")
+    # enemy_mask = create_mask(blue_cropped, "enemy")
     #
-    # in_battle = True
-    # while in_battle:
-    #     time.sleep(10)
-    #     image = get_image()
-    #     battle = check_if_endbattle(image)
-    #     if battle:
-    #         in_battle = False
-    #         print("ended battle")
-    #         break
-    #     else:
-    #         print("still in battle")
-    #     h += 1
-    #     if h == 100:
-    #         out = False
-    #         raise Exception("ERROR")
+    # binary_image = np.where(player_mask, 255, 0).astype(np.uint8)
+    # binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
+    # print(player_mask)
+    # # blue_cropped = blue_cropped[blue_cropped[:,:,0]]
+    # # blue_cropped[~np.all(
+    # #     (blue_cropped[:, :, 0] > 230) & (150 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 250) & (
+    # #                 0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 70), axis=1)] = (0, 0, 0)
+    # # w, h, _ = blue_cropped.shape
+    # # print(w, h)
+    # # print(blue_cropped[0,0])
+    # # for i in range(w):
+    # #     for j in range(h):
+    # #         print(f"{blue_cropped[j, i]} == (0, 198, 255)")
+    # #         if np.all(blue_cropped[j, i] == [255, 198, 0]):
+    # #             print(f"{blue_cropped[j, i]} == (0, 198, 255)")
+    # #             blue_cropped[j, i] = (0,0,0)
+    # #         else:
+    # #             blue_cropped[j, i] = (255, 255, 255)
     #
-    # print("END")
+    # # blue_cropped = np.where(np.all(blue_cropped == (0, 198, 255), axis=2, keepdims=True), (255, 255, 255), blue_cropped)
+    #
+    # # blue_cropped[np.where(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
+    #
+    # # for rgb in blue_cropped:
+    # #     if np.all(rgb == (0, 198, 255)):
+    # #         rgb = (255, 255, 255)
+    # #     else:
+    # #         rgb = (0, 0, 0)
+    #
+    # # blue_cropped = blue_cropped[np.where(blue_cropped==(0,198,255),255,0)]
+    # # print(blue_cropped)
+    #
+    # ret, thresh1 = cv2.threshold(cropped_gray, 150, 255, cv2.THRESH_BINARY)
+    #
+    #
+    #
+    #
+    #
+    # contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # image_copy = deepcopy(blue_cropped)
+    #
+    #
+    #
+    #
+    # calculate_orientation(binary_image, binary_image2, image_copy)
+    #
+
 
 
 
