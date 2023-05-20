@@ -3,13 +3,14 @@ import math
 import os
 from copy import deepcopy
 from typing import Union
-
+from mss import mss
 import cv2
 import numpy as np
 import PIL.ImageGrab
 import time
 import pyautogui
 import keyboard
+import torch
 import win32api, win32con
 from pynput.mouse import Button, Controller
 
@@ -373,11 +374,65 @@ def find_enemy():
     calculate_orientation(binary_image, binary_image2, image_copy)
 
 
+
+
+
 if __name__ == '__main__':
     time.sleep(1)
+    print("Start")
+    model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/last.pt')  # local custom model
+    print(model.names)
+    # model = torch.load(f'{os.getcwd()}/yolov5', 'custom', path=f'{os.getcwd()}\\model\\best.pt')  # local custom model
+    sct = mss()
+    from PIL import Image
+    while True:
+        # time.sleep(0.7)
+        monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
+        img = Image.frombytes('RGB', (IMAGE_WIDTH, IMAGE_HEIGHT), sct.grab(monitor).rgb)
+        # img = np.array(img)
+        screen = np.array(img)
+        # screen = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        screen = cv2.resize(screen ,(640,640))
+        # print(screen)
+        c_t_l = {0:"eliminator",
+                 1:"disruptor",
+                 2:"reaver",
+                 3:"antibaryon"}
+        result = model(screen)
+        print("result")
+        # print(result)
+        labels, cord = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
+        print(labels)
+        print(cord)
+        n = len(labels)
+        print(n)
+        for i in range(n):
+            row = cord[i]
+            # print(row[0])
+            # print(row[1])
+            # print(row[2])
+            # print(row[3])
+            # print(row[4])
+            if row[4] >= 0.5:
+                # x1, y1, x2, y2 = int(row[0]*IMAGE_WIDTH), int(row[1]*IMAGE_HEIGHT), int(row[2]*IMAGE_WIDTH), int(row[0]*IMAGE_HEIGHT)
+                x1, y1, x2, y2 = int(row[0]*640), int(row[1]*640), int(row[2]*640), int(row[0]*640)
+                bgr = (0, 255, 0)
+                cv2.rectangle(screen, (x1, y1), (x2, y2), bgr, 2)
+                # print(labels[i])
+                leb = labels[i].cpu()
+                cv2.putText(screen, c_t_l[int(leb.item())], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9 , (0, 255, 0), 2)
 
-    img = get_image(place = "map")
-    show_images(img)
+
+    # img = get_image(place = "all")
+        screen = cv2.resize(screen, (2560, 1440))
+        screen = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
+        cv2.namedWindow("Screen")
+        cv2.moveWindow("Screen", -2560, 0)
+        cv2.imshow("Screen", screen)
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
+    # show_images(img)
 
 
     # click_cords(Cord(200,201,200,201))
