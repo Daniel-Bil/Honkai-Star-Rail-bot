@@ -1,6 +1,9 @@
 import json
 import math
 import os
+import random
+
+from colorama import Fore
 from copy import deepcopy
 from typing import Union
 from mss import mss
@@ -16,10 +19,16 @@ from pynput.mouse import Button, Controller
 
 from Class1.lvl_class import LVL
 from dictionaries import in_battle_skillpoint_dict, out_of_battle_cord_dict, Cord, Herta_Space_Station_dict, \
-    Storage_Zone_dict
+    Storage_Zone_dict, Base_Zone_dict, Supply_Zone_dict
 from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, turn, \
-    press_map2, click_cords
+    press_map2, click_cords, attack
 from utilities import show_images
+colors = {0: (0,255,0),
+          1: (46,139,87),
+          2: (0,139,139),
+          3: (0,255,255),
+          4: (127,255,212),
+          5: (255,0,255)}
 
 IMAGE_WIDTH: int = 2560
 IMAGE_HEIGHT: int = 1440
@@ -30,7 +39,7 @@ hp_max = (49,255,249)
 
 lost_hp = (52,59,65)
 lost_hp2 = (56,64,71)
-
+GREEN = (0, 255, 0)
 def check_fight(timer=10):
     h=0
     while True:
@@ -178,6 +187,15 @@ def check_if_battle(image):
     else:
         return False
 
+def w84endbattle():
+    while True:
+        img = get_image()
+        battle = check_if_endbattle(img)
+        time.sleep(3)
+        if battle:
+            print(f"{Fore.LIGHTRED_EX} END BATTLE {Fore.RESET}")
+            break
+        print("STILL IN BATTLE")
 
 def check_if_endbattle(image):
     rgbs = []
@@ -205,7 +223,7 @@ def get_image(convert=True, place="all"):
     elif place == "map":
         im = PIL.ImageGrab.grab((63, 77, 312, 326))
     else:
-        raise Exception("XD")
+        raise Exception("sas")
 
     image = np.array(im)
     if convert:
@@ -280,7 +298,7 @@ def calculate_orientation(player, enemy, image):
     print(cy)
 
     print(box)
-    # cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
+    cv2.drawContours(image_copy, [box], 0, (0, 0, 255), 2)
     # cv2.drawContours(image_copy, [hull], 0, (255, 0, 0), 3)
 
     cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 3)
@@ -311,7 +329,7 @@ def calculate_orientation(player, enemy, image):
     cv2.circle(image_copy, sorted_data[0][1], radius=5, color=(0, 0, 0), thickness=-1)
     c_i = np.concatenate((cv2.resize(player_rgb,(700,700)),cv2.resize(enemy_rgb,(700,700)),cv2.resize(image_copy,(700,700))),axis=1)
 
-    # cv2.imshow("all", c_i)
+    cv2.imshow("all", c_i)
     w, h, c = image.shape
     point2 = Point(w // 2, h // 2)
     print()
@@ -354,11 +372,11 @@ def calculate_orientation(player, enemy, image):
     cv2.imwrite("XD.png", image_copy)
 
 
-    # cv2.imshow("2 closest", image_copy)
+    cv2.imshow("2 closest", image_copy)
 
 
 
-    # cv2.waitKey(0)
+    cv2.waitKey(0)
 
 
 def find_enemy():
@@ -372,59 +390,106 @@ def find_enemy():
     binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
     image_copy = deepcopy(blue_cropped)
     calculate_orientation(binary_image, binary_image2, image_copy)
+def load_model(planet):
+    if planet == "Herta":
+        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
+    elif planet == "Jarilo4":
+        raise Exception("Not implemented model")
+        # model = torch.hub.load(f'ultralytics/yolov5', 'custom',
+        #                        path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
+    elif planet == "xianhou":
+        # model = torch.hub.load(f'ultralytics/yolov5', 'custom',
+        #                        path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
+        raise Exception("Not implemented model")
+    else:
+        raise Exception("wrong planet")
+    return model
 
 
 
-
-
-if __name__ == '__main__':
-    time.sleep(1)
-    print("Start")
-    model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/last.pt')  # local custom model
-    print(model.names)
-    # model = torch.load(f'{os.getcwd()}/yolov5', 'custom', path=f'{os.getcwd()}\\model\\best.pt')  # local custom model
+def locate_enemy_and_start_battle(model):
+    timeout = 0
     sct = mss()
+    monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
     from PIL import Image
     while True:
         # time.sleep(0.7)
-        monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
+
         img = Image.frombytes('RGB', (IMAGE_WIDTH, IMAGE_HEIGHT), sct.grab(monitor).rgb)
         # img = np.array(img)
+        whole_image = np.array(img)
         screen = np.array(img)
         # screen = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        screen = cv2.resize(screen ,(640,640))
+        screen = cv2.resize(screen, (640, 640))
         # print(screen)
-        c_t_l = {0:"eliminator",
-                 1:"disruptor",
-                 2:"reaver",
-                 3:"antibaryon"}
+        c_t_l = {0: "eliminator",
+                 1: "disruptor",
+                 2: "reaver",
+                 3: "antibaryon"}
         result = model(screen)
-        print("result")
-        # print(result)
+
         labels, cord = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
-        print(labels)
-        print(cord)
+        # print(labels)
+        # print(cord)
         n = len(labels)
         print(n)
-        for i in range(n):
-            row = cord[i]
-            # print(row[0])
-            # print(row[1])
-            # print(row[2])
-            # print(row[3])
-            # print(row[4])
+        if n > 0:
+            timeout -= 1
+            row = cord[0]
+
             if row[4] >= 0.5:
-                # x1, y1, x2, y2 = int(row[0]*IMAGE_WIDTH), int(row[1]*IMAGE_HEIGHT), int(row[2]*IMAGE_WIDTH), int(row[0]*IMAGE_HEIGHT)
-                x1, y1, x2, y2 = int(row[0]*640), int(row[1]*640), int(row[2]*640), int(row[0]*640)
-                bgr = (0, 255, 0)
-                cv2.rectangle(screen, (x1, y1), (x2, y2), bgr, 2)
-                # print(labels[i])
-                leb = labels[i].cpu()
-                cv2.putText(screen, c_t_l[int(leb.item())], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9 , (0, 255, 0), 2)
+                x1, y1, x2, y2 = int(row[0] * 640), int(row[1] * 640), int(row[2] * 640), int(row[0] * 640)
+                xc = (x1 + x2) / 2
+                yc = (y1 + y2) / 2
+                print(f"{Fore.GREEN} {xc} {yc} {(x2 - x1)} {Fore.RESET}")
+                if 320 - 64 < xc < 320 + 64:
+                    przod(0.1)
+                    random_value3 = random.randint(0, 100)
+                    if random_value3 < 10:
+                        random_value4 = random.randint(0, 1)
+                        if random_value4==0:
+                            tyl(0.5)
+                            right(0.5)
+                        else:
+                            tyl(0.5)
+                            left(0.5)
+                    if (x2 - x1) > 50:
+                        attack()
+                elif xc < 320 - 64:
+                    turn(-2)
+                elif xc > 320 - 64:
+                    turn(2)
+                else:
+                    print("XDDDD")
+
+                leb = labels[0].cpu()
+
+                cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
+                cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+                            (0, 255, 0), 2)
 
 
-    # img = get_image(place = "all")
-        screen = cv2.resize(screen, (2560, 1440))
+            battle = check_if_battle(whole_image)
+            if battle:
+                print(f"{Fore.LIGHTCYAN_EX} FIGHT STARTED {Fore.RESET}")
+                time.sleep(6)
+                print("start autobattle")
+                start_autobattle()
+                break
+        else:
+            print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY  {timeout} < 30 {Fore.RESET}")
+            random_value = random.randint(0, 1)
+            random_value2 = random.randint(1, 100)
+            if random_value == 0:
+                turn(random_value2)
+            else:
+                turn(-random_value2)
+            timeout+=1
+
+        if timeout > 30:
+            print(f"{Fore.RED} TIMEOUT NO ENEMY FOUND {Fore.RESET}")
+            break
+
         screen = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
         cv2.namedWindow("Screen")
         cv2.moveWindow("Screen", -2560, 0)
@@ -432,6 +497,147 @@ if __name__ == '__main__':
         if cv2.waitKey(25) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
+
+
+
+if __name__ == '__main__':
+    time.sleep(1)
+    model = load_model("Herta")
+
+    press_map2()
+    tp_cord = Cord(2341, 2342, 1299, 1300)
+
+    ############### FIRST TP ##############################
+    click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
+    click_cords(Cord(977, 978, 676, 677), slow=2)
+    click_cords(tp_cord, slow=4)
+
+    ############### SECOND TP ##############################
+    press_map2()
+    click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
+    click_cords(Storage_Zone_dict["Courtyard"], slow=2)
+    click_cords(Cord(1570, 1571, 1007, 1008), slow=2)
+    click_cords(tp_cord, slow=4)
+
+
+    locate_enemy_and_start_battle(model)
+    w84endbattle()
+    locate_enemy_and_start_battle(model)
+
+    #################### THIRD TP ######################
+    print("base zone teleport")
+    press_map2()
+    click_cords(Herta_Space_Station_dict["base_zone"], slow=2)
+    click_cords(Base_Zone_dict["Monitoring_Room"], slow=2)
+    click_cords(tp_cord, slow=4)
+    turn_around()
+    przod(1)
+    locate_enemy_and_start_battle(model)
+    w84endbattle()
+
+    #################### FOURTH TP ######################
+
+    print("supply zone")
+    press_map2()
+    click_cords(Herta_Space_Station_dict["supply_zone"], slow=2)
+    click_cords(Supply_Zone_dict["Spare Parts Warehouse"], slow=2)
+    click_cords(tp_cord, slow=4)
+
+
+    locate_enemy_and_start_battle(model)
+    w84endbattle()
+
+    ################# PARLOR CAR ################################
+    press_map2()
+    click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
+    click_cords(Cord(977, 978, 676, 677), slow=2)
+    click_cords(tp_cord, slow=4)
+
+    ################ SIXTH TP####################
+    press_map2()
+
+    click_cords(Herta_Space_Station_dict["supply_zone"], slow=2)
+    click_cords(Supply_Zone_dict["Electrical Room"], slow=2)
+    click_cords(Cord(1442, 1443, 999, 1000), slow=2)
+    click_cords(tp_cord, slow=4)
+
+    locate_enemy_and_start_battle(model)
+    w84endbattle()
+
+
+
+
+
+
+    # sct = mss()
+    # from PIL import Image
+    # while True:
+    #     # time.sleep(0.7)
+    #     monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
+    #     img = Image.frombytes('RGB', (IMAGE_WIDTH, IMAGE_HEIGHT), sct.grab(monitor).rgb)
+    #     # img = np.array(img)
+    #     screen = np.array(img)
+    #     # screen = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    #     screen = cv2.resize(screen, (640, 640))
+    #     # print(screen)
+    #     c_t_l = {0:"eliminator",
+    #              1:"disruptor",
+    #              2:"reaver",
+    #              3:"antibaryon"}
+    #     result = model(screen)
+    #     print("result")
+    #     # print(result)
+    #     labels, cord = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
+    #     print(labels)
+    #     print(cord)
+    #     n = len(labels)
+    #     print(n)
+    #     if n > 0:
+    #         row = cord[0]
+    #
+    #         if row[4] >= 0.5:
+    #             x1, y1, x2, y2 = int(row[0] * 640), int(row[1] * 640), int(row[2] * 640), int(row[0] * 640)
+    #             xc = (x1 + x2) / 2
+    #             yc = (y1 + y2) / 2
+    #             print(f"{Fore.GREEN} {xc} {yc} {(x2 - x1)} {Fore.RESET}")
+    #             if 320-64 < xc < 320 + 64:
+    #                 przod(0.1)
+    #
+    #                 if (x2 - x1) > 50:
+    #
+    #                     attack()
+    #             elif xc < 320-64:
+    #                 turn(-2)
+    #             elif xc > 320 - 64:
+    #                 turn(2)
+    #             else:
+    #                 print("XDDDD")
+    #
+    #             leb = labels[0].cpu()
+    #
+    #             cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
+    #             cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+        # for i in range(n):
+        #     row = cord[i]
+        #
+        #     if row[4] >= 0.5:
+        #         x1, y1, x2, y2 = int(row[0]*640), int(row[1]*640), int(row[2]*640), int(row[0]*640)
+        #         cv2.rectangle(screen, (x1, y1), (x2, y2), colors[i], 2)
+        #         # print(labels[i])
+        #         leb = labels[i].cpu()
+        #         cv2.putText(screen, c_t_l[int(leb.item())], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9 , (0, 255, 0), 2)
+    #
+    #
+    # # img = get_image(place = "all")
+    #     screen = cv2.resize(screen, (2560, 1440))
+    #     screen = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
+    #     cv2.namedWindow("Screen")
+    #     cv2.moveWindow("Screen", -2560, 0)
+    #     cv2.imshow("Screen", screen)
+    #     if cv2.waitKey(25) & 0xFF == ord('q'):
+    #         cv2.destroyAllWindows()
+    #         break
     # show_images(img)
 
 
@@ -506,6 +712,9 @@ if __name__ == '__main__':
     # lvl.play_lvl()
     # time.sleep(1)
     # click_cords(Cord(200,201,200,201))
+
+
+
     #
     #
     # tyl(6.5)

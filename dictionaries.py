@@ -50,9 +50,14 @@ Herta_Space_Station_dict = {"parlor_car": Cord(2431, 2432, 309, 310),
 Base_Zone_dict = {"Monitoring_Room": Cord(1123, 1124, 216, 217),
                   "Reception_Center": Cord(931, 932, 690, 691)}
 
+
 Storage_Zone_dict = {"Calyx (Crimson): Bud of Destruction": Cord(660, 661, 680, 681),
                      "Outside_the_Control_Center": Cord(728, 729, 750, 751),
                      "Courtyard": Cord(1070, 1071, 711, 712)}
+
+Supply_Zone_dict = {"Spare Parts Warehouse": Cord(770, 771, 545, 546),
+                     "Calyx": Cord(821, 822, 647, 648),
+                     "Electrical Room": Cord(420, 421, 775, 776)}
 
 Jarilo_VI_dict = {"parlor_car": Cord(2431, 2432, 309, 310),
                   "master_control_zone": Cord(2443, 2444, 437, 438),

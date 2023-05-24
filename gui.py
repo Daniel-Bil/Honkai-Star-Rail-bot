@@ -40,11 +40,11 @@ def press_map2():
 
 
 def przod(run_time=0.1):
-    time.sleep(0.1)
+
     keyboard.press('w')
     time.sleep(run_time)
     keyboard.release('w')
-    time.sleep(0.1)
+
 
 def tyl(run_time=0.1):
     time.sleep(0.1)
@@ -71,13 +71,13 @@ def left(run_time=0.1):
 
 
 def start_autobattle():
-    time.sleep(0.1)
+    time.sleep(0.5)
     mouse = Controller()
     mouse.position = (2350, 67)
-    time.sleep(0.1)
+    time.sleep(0.5)
 
     mouse.click(Button.left)
-    time.sleep(0.1)
+    time.sleep(0.5)
 
 
 def click_cords(cord, slow=0.1):
@@ -111,6 +111,13 @@ def turn(value):
     time.sleep(0.2)
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, value, 0, 0, 0)
     time.sleep(0.1)
+
+
+def attack(slow=0.1):
+    time.sleep(slow)
+    mouse = Controller()
+    mouse.position = (1280, 720)
+    mouse.click(Button.left)
 
 
 
