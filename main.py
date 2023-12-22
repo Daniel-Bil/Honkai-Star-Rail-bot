@@ -493,8 +493,11 @@ def locate_enemy_and_start_battle(model, c_t_l= None):
                     leb = labels[h].cpu()
 
                     cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
-                    cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+                    try:
+                        cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
                                 (0, 255, 0), 2)
+                    except:
+                        pass
             else:
                 print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY inside {timeout} < 60 {Fore.RESET}")
                 random_value = random.randint(0, 1)
@@ -575,8 +578,9 @@ def combine1(template):
     print(f"{Fore.GREEN}Combine1{Fore.RESET}")
     wait_for_template(template)
     cord = locate_template(template)
-    c = Cord(*cord)
+    c = Cord(cord[0]+30,cord[1]+30)
     c.move_and_click_cord()
+    time.sleep(2)
 
 
 
@@ -589,7 +593,7 @@ if __name__ == '__main__':
 
 
 
-    all = True
+    all = False
     if all:
 
         model = load_model("Herta")

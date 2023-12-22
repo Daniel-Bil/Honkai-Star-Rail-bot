@@ -63,7 +63,7 @@ def mouse_move2(pos=(1350, 340)):
     mouse.position = pos
     time.sleep(0.2)
 
-def press_map2(slow1=1,slow2=1):
+def press_map2(slow1=0.2,slow2=1):
     time.sleep(slow1)
     keyboard.press('m')
     time.sleep(slow1)
