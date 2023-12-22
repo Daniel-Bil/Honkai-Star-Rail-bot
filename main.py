@@ -18,10 +18,12 @@ import win32api, win32con
 from pynput.mouse import Button, Controller
 
 from Class1.lvl_class import LVL
+# from Herta_lvl import play
 from dictionaries import in_battle_skillpoint_dict, out_of_battle_cord_dict, Cord, Herta_Space_Station_dict, \
-    Storage_Zone_dict, Base_Zone_dict, Supply_Zone_dict
+    Storage_Zone_dict, Base_Zone_dict, Supply_Zone_dict, star_map_dict, Jarilo_VI_dict, Outlying_Snow_Plains, \
+    Backwater_Pass, templates
 from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, turn, \
-    press_map2, click_cords, attack
+    press_map2, click_cords, attack, mouse_move, mouse_move2, press_keyboard, scroll
 from utilities import show_images
 colors = {0: (0,255,0),
           1: (46,139,87),
@@ -29,7 +31,7 @@ colors = {0: (0,255,0),
           3: (0,255,255),
           4: (127,255,212),
           5: (255,0,255)}
-
+tp_cord = Cord(2341, 2342, 1299, 1300)
 IMAGE_WIDTH: int = 2560
 IMAGE_HEIGHT: int = 1440
 IMAGE_CHANNELS: int = 3
@@ -86,7 +88,7 @@ def create_mask(image, color):
     else:
         raise Exception("Cant create mask")
     return mask
-def read_json(path):
+def read_json(path: str):
     with open(f'{path}', 'r') as openfile:
         json_object = json.load(openfile)
     return json_object
@@ -94,6 +96,7 @@ def read_json(path):
 def save_json(path, dict):
     with open(f"{path}", "w") as outfile:
         json.dump(dict, outfile)
+
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -217,7 +220,14 @@ def check_if_endbattle(image):
         return False
 
 
-def get_image(convert=True, place="all"):
+def get_image(convert=True, place="all", gray=False):
+    """
+
+    :param convert:
+    :param place:
+    :param gray:
+    :return:
+    """
     if place == "all":
         im = PIL.ImageGrab.grab()
     elif place == "map":
@@ -228,6 +238,9 @@ def get_image(convert=True, place="all"):
     image = np.array(im)
     if convert:
        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    if gray:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     return image
 
 
@@ -390,16 +403,22 @@ def find_enemy():
     binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
     image_copy = deepcopy(blue_cropped)
     calculate_orientation(binary_image, binary_image2, image_copy)
-def load_model(planet):
+
+def load_model(planet: str="Herta"):
+    """
+    Function that loads model for current planet
+    :param planet: name of the planet
+    :return:
+    """
     if planet == "Herta":
-        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
-    elif planet == "Jarilo4":
-        raise Exception("Not implemented model")
-        # model = torch.hub.load(f'ultralytics/yolov5', 'custom',
-        #                        path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
+        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/herta_newest.pt')
+    elif planet == "Jarilo6":
+        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/jarilo6.pt')
     elif planet == "xianhou":
         # model = torch.hub.load(f'ultralytics/yolov5', 'custom',
         #                        path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
+        raise Exception("Not implemented model")
+    elif planet == "panacony":
         raise Exception("Not implemented model")
     else:
         raise Exception("wrong planet")
@@ -407,7 +426,12 @@ def load_model(planet):
 
 
 
-def locate_enemy_and_start_battle(model):
+def locate_enemy_and_start_battle(model, c_t_l= None):
+    if c_t_l is None:
+        c_t_l = {0: "eliminator",
+                 1: "disruptor",
+                 2: "reaver",
+                 3: "antibaryon"}
     timeout = 0
     sct = mss()
     monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
@@ -422,57 +446,73 @@ def locate_enemy_and_start_battle(model):
         # screen = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         screen = cv2.resize(screen, (640, 640))
         # print(screen)
-        c_t_l = {0: "eliminator",
-                 1: "disruptor",
-                 2: "reaver",
-                 3: "antibaryon"}
+
         result = model(screen)
 
         labels, cord = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
-        # print(labels)
-        # print(cord)
+
         n = len(labels)
         print(n)
         if n > 0:
             timeout -= 1
-            row = cord[0]
-
-            if row[4] >= 0.5:
-                x1, y1, x2, y2 = int(row[0] * 640), int(row[1] * 640), int(row[2] * 640), int(row[0] * 640)
-                xc = (x1 + x2) / 2
-                yc = (y1 + y2) / 2
-                print(f"{Fore.GREEN} {xc} {yc} {(x2 - x1)} {Fore.RESET}")
-                if 320 - 64 < xc < 320 + 64:
-                    przod(0.1)
-                    random_value3 = random.randint(0, 100)
-                    if random_value3 < 10:
-                        random_value4 = random.randint(0, 1)
-                        if random_value4==0:
-                            tyl(0.5)
-                            right(0.5)
-                        else:
-                            tyl(0.5)
-                            left(0.5)
-                    if (x2 - x1) > 50:
-                        attack()
-                elif xc < 320 - 64:
-                    turn(-2)
-                elif xc > 320 - 64:
-                    turn(2)
+            v = 0
+            for h, c in enumerate(cord):
+                if int(labels[h].cpu().item()) == 13 or int(labels[h].cpu().item()) == 14:
+                    v = None
+                    pass
                 else:
-                    print("XDDDD")
+                    row = cord[h]
+                    v = h
+                    break
+            if v is not None:
+                if row[4] >= 0.5:
+                    x1, y1, x2, y2 = int(row[0] * 640), int(row[1] * 640), int(row[2] * 640), int(row[0] * 640)
+                    xc = (x1 + x2) / 2
+                    yc = (y1 + y2) / 2
+                    print(f"{Fore.GREEN} {xc} {yc} {(x2 - x1)} {Fore.RESET}")
+                    if 320 - 64 < xc < 320 + 64:
+                        przod(0.1)
+                        random_value3 = random.randint(0, 100)
+                        if random_value3 < 5:
+                            random_value4 = random.randint(0, 1)
+                            if random_value4==0:
+                                tyl(0.5)
+                                right(0.5)
+                            else:
+                                tyl(0.5)
+                                left(0.5)
+                        if (x2 - x1) > 45:
+                            attack()
+                    elif xc < 320 - 64:
+                        turn(-5)
+                    elif xc > 320 - 64:
+                        turn(5)
+                    else:
+                        print("XDDDD")
 
-                leb = labels[0].cpu()
+                    leb = labels[h].cpu()
 
-                cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
-                cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
-                            (0, 255, 0), 2)
+                    cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
+                    cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+                                (0, 255, 0), 2)
+            else:
+                print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY inside {timeout} < 60 {Fore.RESET}")
+                random_value = random.randint(0, 1)
+                random_value2 = random.randint(1, 100)
+                if random_value == 0:
+                    turn(random_value2)
+                else:
+                    turn(-random_value2)
+                timeout += 1
 
+            if timeout > 60:
+                print(f"{Fore.RED} TIMEOUT NO ENEMY FOUND {Fore.RESET}")
+                break
 
             battle = check_if_battle(whole_image)
             if battle:
                 print(f"{Fore.LIGHTCYAN_EX} FIGHT STARTED {Fore.RESET}")
-                time.sleep(6)
+                time.sleep(4)
                 print("start autobattle")
                 start_autobattle()
                 break
@@ -498,227 +538,461 @@ def locate_enemy_and_start_battle(model):
             cv2.destroyAllWindows()
             break
 
+def tp_parlor():
+    press_map2()
+    tp_cord = Cord(2341, 2342, 1299, 1300)
+    Herta_Space_Station_dict["parlor_car"].move_and_click_cord()
+
+    ############### FIRST TP ##############################
+    Cord(977, 978, 676, 677).move_and_click_cord()
+    tp_cord.move_and_click_cord(slow5=4)
+def wait_for_template(template):
+    time.sleep(1)
+    print("w8 for template")
+    start = True
+    while start:
+        image = get_image(gray=True)
+
+        res = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(res >= 0.8)
+        for _ in zip(*loc[::-1]):
+            start = False
+            break
+
+def locate_template(template):
+    time.sleep(1)
+    print("locate template")
+
+    image = get_image(gray=True)
+
+    res = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+    loc = np.where(res >= 0.8)
+    p1, p2 = loc[::-1]
+    if len(p1)>1:
+        return p1[0], p2[0]
+
+def combine1(template):
+    print(f"{Fore.GREEN}Combine1{Fore.RESET}")
+    wait_for_template(template)
+    cord = locate_template(template)
+    c = Cord(*cord)
+    c.move_and_click_cord()
+
 
 
 if __name__ == '__main__':
-    time.sleep(1)
-    model = load_model("Herta")
-
-    press_map2()
-    tp_cord = Cord(2341, 2342, 1299, 1300)
-
-    ############### FIRST TP ##############################
-    click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
-    click_cords(Cord(977, 978, 676, 677), slow=2)
-    click_cords(tp_cord, slow=4)
-
-    ############### SECOND TP ##############################
-    press_map2()
-    click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
-    click_cords(Storage_Zone_dict["Courtyard"], slow=2)
-    click_cords(Cord(1570, 1571, 1007, 1008), slow=2)
-    click_cords(tp_cord, slow=4)
 
 
-    locate_enemy_and_start_battle(model)
-    w84endbattle()
-    locate_enemy_and_start_battle(model)
-
-    #################### THIRD TP ######################
-    print("base zone teleport")
-    press_map2()
-    click_cords(Herta_Space_Station_dict["base_zone"], slow=2)
-    click_cords(Base_Zone_dict["Monitoring_Room"], slow=2)
-    click_cords(tp_cord, slow=4)
-    turn_around()
-    przod(1)
-    locate_enemy_and_start_battle(model)
-    w84endbattle()
-
-    #################### FOURTH TP ######################
-
-    print("supply zone")
-    press_map2()
-    click_cords(Herta_Space_Station_dict["supply_zone"], slow=2)
-    click_cords(Supply_Zone_dict["Spare Parts Warehouse"], slow=2)
-    click_cords(tp_cord, slow=4)
-
-
-    locate_enemy_and_start_battle(model)
-    w84endbattle()
-
-    ################# PARLOR CAR ################################
-    press_map2()
-    click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
-    click_cords(Cord(977, 978, 676, 677), slow=2)
-    click_cords(tp_cord, slow=4)
-
-    ################ SIXTH TP####################
-    press_map2()
-
-    click_cords(Herta_Space_Station_dict["supply_zone"], slow=2)
-    click_cords(Supply_Zone_dict["Electrical Room"], slow=2)
-    click_cords(Cord(1442, 1443, 999, 1000), slow=2)
-    click_cords(tp_cord, slow=4)
-
-    locate_enemy_and_start_battle(model)
-    w84endbattle()
+    time.sleep(2)
+    c = Cord(400,400)
+    c.move_and_click_cord()
 
 
 
+    all = True
+    if all:
+
+        model = load_model("Herta")
 
 
+        c_t_l = read_json(".//config//classes_herta.json")
 
-    # sct = mss()
-    # from PIL import Image
-    # while True:
-    #     # time.sleep(0.7)
-    #     monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
-    #     img = Image.frombytes('RGB', (IMAGE_WIDTH, IMAGE_HEIGHT), sct.grab(monitor).rgb)
-    #     # img = np.array(img)
-    #     screen = np.array(img)
-    #     # screen = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    #     screen = cv2.resize(screen, (640, 640))
-    #     # print(screen)
-    #     c_t_l = {0:"eliminator",
-    #              1:"disruptor",
-    #              2:"reaver",
-    #              3:"antibaryon"}
-    #     result = model(screen)
-    #     print("result")
-    #     # print(result)
-    #     labels, cord = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
-    #     print(labels)
-    #     print(cord)
-    #     n = len(labels)
-    #     print(n)
-    #     if n > 0:
-    #         row = cord[0]
-    #
-    #         if row[4] >= 0.5:
-    #             x1, y1, x2, y2 = int(row[0] * 640), int(row[1] * 640), int(row[2] * 640), int(row[0] * 640)
-    #             xc = (x1 + x2) / 2
-    #             yc = (y1 + y2) / 2
-    #             print(f"{Fore.GREEN} {xc} {yc} {(x2 - x1)} {Fore.RESET}")
-    #             if 320-64 < xc < 320 + 64:
-    #                 przod(0.1)
-    #
-    #                 if (x2 - x1) > 50:
-    #
-    #                     attack()
-    #             elif xc < 320-64:
-    #                 turn(-2)
-    #             elif xc > 320 - 64:
-    #                 turn(2)
-    #             else:
-    #                 print("XDDDD")
-    #
-    #             leb = labels[0].cpu()
-    #
-    #             cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
-    #             cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-        # for i in range(n):
-        #     row = cord[i]
+        press_map2()
+        time.sleep(1)
+        print("scroll")
+        for _ in range(10):
+            pyautogui.scroll(-1)
+
+        ############### FIRST TP ############################## PARLOR CAR
+        print("tp to parlor car")
+        click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
+        click_cords(Cord(977, 978, 676, 677), slow=2)
+
+
+        combine1(templates["teleport"])
+        # wait_for_template(templates["teleport"])
         #
-        #     if row[4] >= 0.5:
-        #         x1, y1, x2, y2 = int(row[0]*640), int(row[1]*640), int(row[2]*640), int(row[0]*640)
-        #         cv2.rectangle(screen, (x1, y1), (x2, y2), colors[i], 2)
-        #         # print(labels[i])
-        #         leb = labels[i].cpu()
-        #         cv2.putText(screen, c_t_l[int(leb.item())], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9 , (0, 255, 0), 2)
-    #
-    #
-    # # img = get_image(place = "all")
-    #     screen = cv2.resize(screen, (2560, 1440))
-    #     screen = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
-    #     cv2.namedWindow("Screen")
-    #     cv2.moveWindow("Screen", -2560, 0)
-    #     cv2.imshow("Screen", screen)
-    #     if cv2.waitKey(25) & 0xFF == ord('q'):
-    #         cv2.destroyAllWindows()
-    #         break
-    # show_images(img)
+        # click_cords(tp_cord, slow=0.1)
+        wait_for_template(templates["nameless_template"])
+        ############### SECOND TP ############################## STORAGE Zone
+        print("tp to storage zone")
+        press_map2()
+        click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
+        click_cords(Storage_Zone_dict["Courtyard"], slow=2)
+        click_cords(Cord(1570, 1571, 1007, 1008), slow=2)
+        # wait_for_template(templates["teleport"])
+        # click_cords(tp_cord, slow=1)
+        combine1(templates["teleport"])
+        wait_for_template(templates["nameless_template"])
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
+        tp_parlor()
+        print("tp to storage zone")
+        press_map2()
+        click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
+        click_cords(Storage_Zone_dict["Courtyard"], slow=2)
+        click_cords(Cord(1570, 1571, 1007, 1008), slow=2)
+        click_cords(tp_cord, slow=4)
+        turn(-90)
+        przod(0.2)
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
+
+        tp_parlor()
+        ############### SECOND TP2 ############################## STORAGE Zone
+        press_map2()
+        click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
+        click_cords(Storage_Zone_dict["Calyx (Crimson): Bud of Destruction"], slow=2)
+        click_cords(tp_cord, slow=4)
+        turn_around()
+        przod(6)
+
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
+        tp_parlor()
+        ############### SECOND TP3 ############################## STORAGE Zone
+        press_map2()
+        click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
+        click_cords(Storage_Zone_dict["Outside_the_Control_Center"], slow=2)
+        click_cords(tp_cord, slow=4)
+
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
+        tp_parlor()
+
+        ############### SECOND TP4 ############################## STORAGE Zone
+        press_map2()
+        click_cords(Herta_Space_Station_dict["storage_zone"], slow=2)
+        click_cords(Storage_Zone_dict["Outside_the_Control_Center"], slow=2)
+        click_cords(tp_cord, slow=4)
+
+        przod(4)
+        turn(-30)
+        przod(4)
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
 
 
-    # click_cords(Cord(200,201,200,201))
-    # time.sleep(1)
-    # print("start")
-    # #Create lvl1
-    # lvl = LVL()
-    # lvl.number_of_enemies = 3
-    # lvl.planet = "Herta_Space_Station"
-    # lvl.room = "storage_zone"
-    #
-    # lvl.sequence_of_moves = [
-    #                          press_map2(),
-    #                          click_cords(Storage_Zone_dict["Courtyard"], slow=2),
-    #                          click_cords(Cord(1570, 1571, 1007, 1008), slow=2),
-    #                          click_cords(Cord(2341, 2342, 1299, 1300), slow=4)]
+        #################### THIRD TP ######################
+        print("base zone teleport")
+        press_map2()
+        click_cords(Herta_Space_Station_dict["base_zone"], slow=2)
+        click_cords(Base_Zone_dict["Monitoring_Room"], slow=2)
+        click_cords(tp_cord, slow=4)
+        turn_around()
+        przod(1)
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
 
-    # [turn(-10),
-    #  przod(4.8),
-    #  find_enemy(),
-    #  przod(5),
-    #  click_cords(Cord(1200, 1201, 1001, 1002)),
-    #  check_fight(1),
-    #  check_end_fight(),
-    #  press_map2(),
-    #  click_cords(Storage_Zone_dict["Courtyard"], slow=2),
-    #  click_cords(Cord(1570, 1571, 1007, 1008), slow=2),
-    #  click_cords(Cord(2341, 2342, 1299, 1300), slow=4)]
+        #################### FOURTH TP ######################
+
+        print("supply zone")
+        press_map2()
+        click_cords(Herta_Space_Station_dict["supply_zone"], slow=2)
+        click_cords(Supply_Zone_dict["Spare Parts Warehouse"], slow=2)
+        click_cords(tp_cord, slow=4)
 
 
-                            # press_map2(),
-                            #  click_cords(Herta_Space_Station_dict[lvl.room], slow=2),
-                            #  click_cords(Storage_Zone_dict["Calyx (Crimson): Bud of Destruction"], slow=2),
-                            #  click_cords(Cord(2341, 2342, 1299, 1300), slow=4),
-                            #  print("teleported to storage zone"),
-                            #  tyl(6.5),
-                            #  left(3.3),
-                            #  przod(6.7),
-                            #  left(2.3),
-                            #  tyl(4.2),
-                            #  check_fight(1),
-                            #  check_end_fight(),
-                            #  press_map2(),
-                            #  click_cords(Storage_Zone_dict["Outside_the_Control_Center"], slow=2),
-                            #  click_cords(Cord(2341, 2342, 1299, 1300), slow=4),
-                            #  find_enemy(),
-                            #  przod(2),
-                            #  check_fight(5),
-                            #  check_end_fight()],
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
 
-    # lvl.sequence_of_moves = [press_map2(),
-    #                          click_cords(Herta_Space_Station_dict[lvl.room],slow=2),
-    #                          click_cords(Storage_Zone_dict["Calyx (Crimson): Bud of Destruction"],slow=2),
-    #                          click_cords(Cord(2341,2342,1299,1300),slow=4),
-    #                          print("teleported to storage zone"),
-    #                          tyl(6.5),
-    #                          left(3.3),
-    #                          przod(6.7),
-    #                          left(2.3),
-    #                          tyl(4.2),
-    #                          check_fight(1),
-    #                          check_end_fight(),
-    #                          press_map2(),
-    #                          click_cords(Storage_Zone_dict["Outside_the_Control_Center"],slow=2),
-    #                          click_cords(Cord(2341,2342,1299,1300),slow=4),
-    #                          find_enemy(),
-    #                          przod(2),
-    #                          check_fight(5),
-    #                          check_end_fight()]
+        ################# PARLOR CAR ################################
+        press_map2()
+        click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
+        click_cords(Cord(977, 978, 676, 677), slow=2)
+        click_cords(tp_cord, slow=4)
+
+        ################ SIXTH TP####################
+        press_map2()
+
+        click_cords(Herta_Space_Station_dict["supply_zone"], slow=2)
+        click_cords(Supply_Zone_dict["Electrical Room"], slow=2)
+        click_cords(Cord(1442, 1443, 999, 1000), slow=2)
+        click_cords(tp_cord, slow=4)
+
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
+
+        przod(10)
+
+        locate_enemy_and_start_battle(model)
+        w84endbattle()
+        ######################### seventh tp #######################
+        tp_parlor()
+
+        press_map2()
+
+        Herta_Space_Station_dict["supply_zone"].move_and_click_cord()
+        Supply_Zone_dict["Calyx"].move_and_click_cord()
+        tp_cord.move_and_click_cord(slow5=4)
+
+        turn(-162)
+        przod(3.5)
+        time.sleep(2)
+        press_keyboard("f")
+        time.sleep(2)
+        przod(1)
+
+        locate_enemy_and_start_battle(model, c_t_l)
+        w84endbattle()
+
+        ####################### eight tp ##################
+
+        tp_parlor()
+
+        press_map2()
+
+        Herta_Space_Station_dict["supply_zone"].move_and_click_cord()
+        Supply_Zone_dict["Calyx"].move_and_click_cord()
+        tp_cord.move_and_click_cord(slow5=4)
+
+        turn(-162)
+        przod(3.5)
+        time.sleep(2)
+        press_keyboard("f")
+        time.sleep(2)
+        przod(1)
+        turn(-90)
+        przod(6)
+
+        locate_enemy_and_start_battle(model, c_t_l)
+        w84endbattle()
+
+        ##################### nineth tp ######################
+
+        tp_parlor()
+
+        press_map2()
+
+        Herta_Space_Station_dict["supply_zone"].move_and_click_cord()
+        Supply_Zone_dict["Spare Parts Warehouse"].move_and_click_cord()
+        tp_cord.move_and_click_cord(slow5=4)
+
+        turn(95)
+        przod(6)
+        turn(90)
+        przod(5)
+        locate_enemy_and_start_battle(model, c_t_l)
+        w84endbattle()
+
+
+    ##################################################################################################################
+    ################### JARILO 6 #########################################
+    ##################################################################################################################
+    time.sleep(2)
+    print(f"{Fore.RED} TELEPORT TO JARILO {Fore.RESET}")
+    model = load_model("Jarilo6")
+    c_t_l = {0: "Automaton Spider",
+             1: "Vagrant",
+             2: "Automaton Beetle",
+             3: "Automaton Hound",
+             4: "Everwinter Shadewalker",
+             5: "Flamespawn",
+             6: "Frostspawn",
+             7: "Imaginary Weaver",
+             8: "Incineration Shadewalker",
+             9: "Mask of No Thought",
+             10: "Silvermane Cannoneer",
+             11: "Silvermane Gunner",
+             12: "Windspawn",
+             13: "teleport",
+             14: "ice statue"}
+
+    press_map2()
+    click_cords(Cord(2399, 2400, 183, 184), slow=2)
+    print("jarilo6")
+    mouse_move((star_map_dict["Jarilo-VI"].x1,star_map_dict["Jarilo-VI"].y1))
+    # mouse_move2()
+
+
+    pyautogui.mouseDown()
+    pyautogui.sleep(0.1)
+    pyautogui.mouseUp()
+    print("0.2")
+    pyautogui.mouseDown()
+    pyautogui.sleep(0.2)
+    pyautogui.mouseUp()
+    print("0.3")
+    pyautogui.mouseDown()
+    pyautogui.sleep(0.3)
+    pyautogui.mouseUp()
+    mouse_move((1000, 500))
+    scroll(up=False)
+    time.sleep(3)
+
+    mouse_move((2400,700))
+    print("scroll")
+    scroll(up=True)
+    time.sleep(3)
+
+    # ############### FIRST TP ############################## PARLOR CAR
+    # print("tp to parlor car")
+    # click_cords(Herta_Space_Station_dict["parlor_car"], slow=2)
+    # click_cords(Cord(977, 978, 676, 677), slow=2)
+    # click_cords(tp_cord, slow=4)
+
+    #################### Jarilo 1 tp ############################
+    click_cords(Jarilo_VI_dict["Outlying Snow Plains"], slow=2)
+    click_cords(Outlying_Snow_Plains["Bud of The Hunt"], slow=2)
+    click_cords(tp_cord, slow=4)
+
+    turn(-100)
+    przod(13)
+    # locate_enemy_and_start_battle(model, c_t_l)
+    # w84endbattle()
+
+    # time.sleep(2)
+
+    # locate_enemy_and_start_battle(model, c_t_l)
+    # w84endbattle()
+
+    # time.sleep(2)
+
+    locate_enemy_and_start_battle(model, c_t_l)
+    w84endbattle()
+
+    time.sleep(2)
+
+    locate_enemy_and_start_battle(model, c_t_l)
+    w84endbattle()
+
+    tp_parlor()
+    press_map2()
+    mouse_move()
+
+    mouse_move((2400, 700))
+    print("scroll")
+    scroll(up=True)
+    time.sleep(10)
+
+    click_cords(Jarilo_VI_dict["Outlying Snow Plains"], slow=2)
+    click_cords(Outlying_Snow_Plains["Long Slope"], slow=2)
+    Cord(1405, 1000).move_and_click_cord()
+    click_cords(tp_cord, slow=4)
+
+    turn(-120)
+    przod(6)
+
+    locate_enemy_and_start_battle(model, c_t_l)
+    w84endbattle()
+
+    tp_parlor()
+    press_map2()
+    mouse_move()
+
+    mouse_move((2400, 700))
+    print("scroll")
+    scroll(up=True)
+    time.sleep(10)
+
+    click_cords(Jarilo_VI_dict["Outlying Snow Plains"], slow=2)
+    click_cords(Outlying_Snow_Plains["Calyx (Golden)"], slow=2)
+    click_cords(tp_cord, slow=4)
+
+    turn(-90)
+    locate_enemy_and_start_battle(model, c_t_l)
+    w84endbattle()
+
+    ###################################################################################################################
+    #                                        BACKWATER PASS
+    ###################################################################################################################
+    for _ in range(3):
+        press_map2()
+        mouse_move((2400, 700))
+        scroll(up=True)
+        press_map2()
+        time.sleep(2)
+        tp_parlor()
+        press_map2()
+        mouse_move((2400, 700))
+        scroll()
+        Jarilo_VI_dict["Backwater Pass"].move_and_click_cord()
+        Backwater_Pass["Transport Hub"].move_and_click_cord()
+        tp_cord.move_and_click_cord(slow5=4)
+        turn(180)
+        przod(5.5)
+        locate_enemy_and_start_battle(model, c_t_l)
+        w84endbattle()
+    #######################################################
+
+
+
+
+    ###################################
+    press_map2()
+    mouse_move((2400, 700))
+
+    scroll(up=True)
+    press_map2()
+    tp_parlor()
+    press_map2()
+    mouse_move((2400, 700))
+    scroll()
+    Jarilo_VI_dict["Backwater Pass"].move_and_click_cord()
+    Backwater_Pass["Calyx (Crimson)"].move_and_click_cord()
+    Cord(1300, 1100).move_and_click_cord()
+    tp_cord.move_and_click_cord(slow5=4)
+    turn(-45)
+    przod(1)
+    locate_enemy_and_start_battle(model,c_t_l)
+    w84endbattle()
+
+
+    ###################################
+    press_map2()
+    mouse_move((2400, 700))
+    scroll(up=True)
+    press_map2()
+    tp_parlor()
+    press_map2()
+    scroll()
+    Jarilo_VI_dict["Backwater Pass"].move_and_click_cord()
+    Backwater_Pass["Calyx (Crimson)"].move_and_click_cord()
+    Cord(1300, 1000).move_and_click_cord()
+    tp_cord.move_and_click_cord(slow5=4)
+    turn(180)
+    przod(1)
+    locate_enemy_and_start_battle(model,c_t_l)
+    w84endbattle()
+
+    ###################################
+    press_map2()
+    mouse_move((2400, 700))
+    press_map2()
+    scroll(up=True)
+    tp_parlor()
+    press_map2()
+    mouse_move((2400, 700))
+    scroll()
+    Jarilo_VI_dict["Backwater Pass"].move_and_click_cord()
+    Backwater_Pass["Goethe Mansion"].move_and_click_cord()
+    tp_cord.move_and_click_cord(slow5=4)
+    przod(3)
+    turn(-45)
+    przod(4)
+    locate_enemy_and_start_battle(model, c_t_l)
+    w84endbattle()
+
+    ###################################
+    press_map2()
+    mouse_move((2400, 700))
+    press_map2()
+    scroll(up=True)
+    tp_parlor()
+    press_map2()
+    mouse_move((2400, 700))
+    scroll()
+    Jarilo_VI_dict["Backwater Pass"].move_and_click_cord()
+    Backwater_Pass["Goethe Mansion"].move_and_click_cord()
+    tp_cord.move_and_click_cord(slow5=4)
+    przod(3)
+    turn(-45)
+    przod(4)
+    locate_enemy_and_start_battle(model, c_t_l)
+    w84endbattle()
+
     print("END PROGRAM")
-    # lvl.play_lvl()
-    # time.sleep(1)
-    # click_cords(Cord(200,201,200,201))
-
-
-
-    #
-    #
-    # tyl(6.5)
-    # turn_around()
 
 
 
@@ -729,76 +1003,7 @@ if __name__ == '__main__':
 
 
 
-    # jsonStr = json.dumps(Cord(1,2,3,4).__dict__)
-    # time.sleep(4)
-    # przod(0.2)
-    # time.sleep(1)
-    # image = get_image()
-    # image = cv2.imread(f"{os.getcwd()}\\test_images\\enemy_on_map_image.png")
-    # cord = Cord(63, 312, 77, 326)
-    # cropped = crop(image, cord)
-    # # cv2.imshow("name", cropped)
-    # cropped_gray = cv2.cvtColor(cropped,cv2.COLOR_BGR2GRAY)
-    # # cv2.imwrite(f"{os.getcwd()}\\test_images\\locked_enemy.png", image)
-    # # threshold = cv2.threshold()
-    # blue_cropped = deepcopy(cropped)
-    #
-    # # blue_cropped[np.all(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
-    # # blue_cropped[np.all(blue_cropped == (255, 198, 0), axis=2)] = (255, 255, 255)
-    # # print((200 < blue_cropped[:, :, 0]) & (blue_cropped[:, :, 0] < 256) &
-    # #       (190 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 256) &
-    # #       (0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 60))
-    #
-    #
-    # player_mask = create_mask(blue_cropped, "player")
-    # enemy_mask = create_mask(blue_cropped, "enemy")
-    #
-    # binary_image = np.where(player_mask, 255, 0).astype(np.uint8)
-    # binary_image2 = np.where(enemy_mask, 255, 0).astype(np.uint8)
-    # print(player_mask)
-    # # blue_cropped = blue_cropped[blue_cropped[:,:,0]]
-    # # blue_cropped[~np.all(
-    # #     (blue_cropped[:, :, 0] > 230) & (150 < blue_cropped[:, :, 1]) & (blue_cropped[:, :, 1] < 250) & (
-    # #                 0 < blue_cropped[:, :, 2]) & (blue_cropped[:, :, 2] < 70), axis=1)] = (0, 0, 0)
-    # # w, h, _ = blue_cropped.shape
-    # # print(w, h)
-    # # print(blue_cropped[0,0])
-    # # for i in range(w):
-    # #     for j in range(h):
-    # #         print(f"{blue_cropped[j, i]} == (0, 198, 255)")
-    # #         if np.all(blue_cropped[j, i] == [255, 198, 0]):
-    # #             print(f"{blue_cropped[j, i]} == (0, 198, 255)")
-    # #             blue_cropped[j, i] = (0,0,0)
-    # #         else:
-    # #             blue_cropped[j, i] = (255, 255, 255)
-    #
-    # # blue_cropped = np.where(np.all(blue_cropped == (0, 198, 255), axis=2, keepdims=True), (255, 255, 255), blue_cropped)
-    #
-    # # blue_cropped[np.where(blue_cropped == (0, 198, 255), axis=2)] = (255, 255, 255)
-    #
-    # # for rgb in blue_cropped:
-    # #     if np.all(rgb == (0, 198, 255)):
-    # #         rgb = (255, 255, 255)
-    # #     else:
-    # #         rgb = (0, 0, 0)
-    #
-    # # blue_cropped = blue_cropped[np.where(blue_cropped==(0,198,255),255,0)]
-    # # print(blue_cropped)
-    #
-    # ret, thresh1 = cv2.threshold(cropped_gray, 150, 255, cv2.THRESH_BINARY)
-    #
-    #
-    #
-    #
-    #
-    # contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # image_copy = deepcopy(blue_cropped)
-    #
-    #
-    #
-    #
-    # calculate_orientation(binary_image, binary_image2, image_copy)
-    #
+
 
 
 

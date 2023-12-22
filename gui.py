@@ -1,4 +1,5 @@
 import os
+import random
 
 import cv2
 import numpy as np
@@ -19,6 +20,11 @@ def sprint():
 def phone():
     pass
 
+def press_keyboard(key):
+    keyboard.press(f'{key}')
+    time.sleep(random.uniform(0.1, 0.3))
+    keyboard.release(f'{key}')
+
 def press_map():
     keyboard.press('left alt')
     time.sleep(0.1)
@@ -31,12 +37,38 @@ def press_map():
 
     keyboard.release('left alt')
 
-def press_map2():
+def scroll(up=True):
+    for _ in range(30):
+        pyautogui.scroll(1 if up else -1)
+    time.sleep(1)
+
+def mouse_move(pos=(2400, 500)):
     time.sleep(0.1)
+    mouse = Controller()
+    mouse.position = pos
+    time.sleep(0.1)
+
+def mouse_move2(pos=(1350, 340)):
+    time.sleep(0.2)
+    mouse = Controller()
+    mouse.position = pos
+    mouse.position = (1350, 340)
+    time.sleep(0.2)
+    mouse.position = (1360, 340)
+    time.sleep(0.2)
+    mouse.position = (1340, 360)
+    time.sleep(0.2)
+    mouse.position = (1340, 350)
+    time.sleep(0.2)
+    mouse.position = pos
+    time.sleep(0.2)
+
+def press_map2(slow1=1,slow2=1):
+    time.sleep(slow1)
     keyboard.press('m')
-    time.sleep(0.1)
+    time.sleep(slow1)
     keyboard.release('m')
-    time.sleep(0.1)
+    time.sleep(slow2)
 
 
 def przod(run_time=0.1):
@@ -81,9 +113,12 @@ def start_autobattle():
 
 
 def click_cords(cord, slow=0.1):
-    time.sleep(slow)
     mouse = Controller()
+    time.sleep(slow)
     mouse.position = (cord.x1, cord.y1)
+    time.sleep(slow)
+
+
     mouse.click(Button.left)
     time.sleep(slow)
 
