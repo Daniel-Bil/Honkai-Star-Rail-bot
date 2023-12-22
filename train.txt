@@ -1,0 +1,1 @@
+py train.py --img 640 --batch 4 --epochs 50 --data jarilo4.yaml --weights yolov5x.pt --nosave --cache
