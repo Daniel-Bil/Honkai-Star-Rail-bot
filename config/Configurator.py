@@ -15,16 +15,26 @@ class Configurator:
         except AttributeError:
             self.base_path = Path()
 
-        # all screen info
-        self.create_base_information()
-
         # all paths creation
         self.create_paths()
+
+        # all screen info
+        self.create_monitor_information()
+
+        # all enemy info
+        self.create_base_information()
 
         # all templates creation
         self.create_templates()
 
     def create_base_information(self) -> None:
+        with open(self.enemy_info_path, "r") as file:
+            self.enemy_info = json.load(file)
+
+        with open(self.enemy_classes_path, "r") as file:
+            self.enemy_classes = json.load(file)
+
+    def create_monitor_information(self) -> None:
         for m in get_monitors():
             # print(m, m.is_primary)
             if m.is_primary:
@@ -41,6 +51,8 @@ class Configurator:
         """
         Creates all needed paths
         """
+        self.config_path = self.base_path / "config"
+
         self.images_path = self.base_path / "images"
 
         self.locations_path = self.images_path / "locations"
@@ -53,14 +65,13 @@ class Configurator:
         # self.herta_locations = self.locations_path / "Panacony"
 
 
-        self.enemy_info_path = self.base_path / "config" / "enemy_info.json"
+        self.enemy_info_path = self.config_path / "enemy_info.json"
+        self.enemy_classes_path = self.config_path / "enemy_classes.json"
 
     def create_templates(self) -> None:
         """
         Creates templates needed for checking operations
         """
-        with open(self.enemy_info_path, "r") as file:
-            self.enemy_info = json.load(file)
 
         self.ui_templates = {}
         for template in list(self.ui_path.glob('*.png')):

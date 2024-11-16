@@ -1,8 +1,15 @@
+import random
 import time
 
 import cv2
 from colorama import Fore
 
+from graphical_functions import get_screen
+from gui_functions import turn, run_forward, run_backwards, run_right, run_left, mouse_click, check_template_exists
+from wrappers import print_function_name
+
+INPUT_WIDTH = 640
+INPUT_HEIGHT = 640
 
 def w84endbattle():
     while True:
@@ -33,123 +40,92 @@ def check_if_endbattle(image):
     else:
         return False
 
-def start_autobattle():
-    time.sleep(0.5)
-    mouse = Controller()
-    mouse.position = (2350, 67)
-    time.sleep(0.5)
 
-    mouse.click(Button.left)
-    time.sleep(0.5)
-
-
-def locate_enemy_and_start_battle(model, c_t_l = None):
-    if c_t_l is None:
-        c_t_l = {0: "eliminator",
-                 1: "disruptor",
-                 2: "reaver",
-                 3: "antibaryon"}
+@print_function_name
+def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_template) -> bool:
     timeout = 0
-    sct = mss()
-    monitor = {'top': 0, 'left': 0, 'width': IMAGE_WIDTH, 'height': IMAGE_HEIGHT}
-    from PIL import Image
+
     while True:
-        # time.sleep(0.7)
+        timeout -= 1  # every check increase timeout
 
-        img = Image.frombytes('RGB', (IMAGE_WIDTH, IMAGE_HEIGHT), sct.grab(monitor).rgb)
-        # img = np.array(img)
-        whole_image = np.array(img)
-        screen = np.array(img)
-        # screen = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        screen = cv2.resize(screen, (640, 640))
-        # print(screen)
+        if (timeout < -50) or (timeout > 50):
+            print(f"{Fore.RED} TIMEOUT NO ENEMY FOUND {Fore.RESET}")
+            return False
 
-        result = model(screen)
 
-        labels, cord = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
+        screen = get_screen()
 
-        n = len(labels)
-        print(n)
-        if n > 0:
-            timeout -= 1
-            v = 0
-            for h, c in enumerate(cord):
-                if int(labels[h].cpu().item()) == 13 or int(labels[h].cpu().item()) == 14:
-                    v = None
-                    pass
-                else:
-                    row = cord[h]
-                    v = h
-                    break
-            if v is not None:
-                if row[4] >= 0.5:
-                    x1, y1, x2, y2 = int(row[0] * 640), int(row[1] * 640), int(row[2] * 640), int(row[0] * 640)
-                    xc = (x1 + x2) / 2
-                    yc = (y1 + y2) / 2
-                    print(f"{Fore.GREEN} {xc} {yc} {(x2 - x1)} {Fore.RESET}")
-                    if 320 - 64 < xc < 320 + 64:
-                        przod(0.1)
-                        random_value3 = random.randint(0, 100)
-                        if random_value3 < 5:
-                            random_value4 = random.randint(0, 1)
-                            if random_value4==0:
-                                tyl(0.5)
-                                right(0.5)
-                            else:
-                                tyl(0.5)
-                                left(0.5)
-                        if (x2 - x1) > 45:
-                            attack()
-                    elif xc < 320 - 64:
-                        turn(-5)
-                    elif xc > 320 - 64:
-                        turn(5)
-                    else:
-                        print("XDDDD")
+        resized_screen = cv2.resize(screen, (640, 640))
 
-                    leb = labels[h].cpu()
+        result = yolo_model(resized_screen)
 
-                    cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
-                    try:
-                        cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
-                                (0, 255, 0), 2)
-                    except:
-                        pass
-            else:
-                print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY inside {timeout} < 60 {Fore.RESET}")
-                random_value = random.randint(0, 1)
-                random_value2 = random.randint(1, 100)
-                if random_value == 0:
-                    turn(random_value2)
-                else:
-                    turn(-random_value2)
-                timeout += 1
+        labels, cords = result.xyxyn[0][:, -1], result.xyxyn[0][:, :-1]
 
-            if timeout > 60:
-                print(f"{Fore.RED} TIMEOUT NO ENEMY FOUND {Fore.RESET}")
-                break
+        number_of_detections = len(labels)
 
-            battle = check_if_battle(whole_image)
-            if battle:
-                print(f"{Fore.LIGHTCYAN_EX} FIGHT STARTED {Fore.RESET}")
-                time.sleep(4)
-                print("start autobattle")
-                start_autobattle()
+        if number_of_detections < 1:
+            print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY  timeout: {timeout} < 30 | detections: {number_of_detections} {Fore.RESET} ")
+            random_value = random.randint(1, 90)
+            turn(random_value)
+            timeout += 1
+            continue
+
+        # some labels are not enemies but model knows them because it can be a mistake
+        for idx, cord in enumerate(cords):
+            if not (int(labels[idx].cpu().item()) == 13 or int(labels[idx].cpu().item()) == 14):
+                row = cords[idx]
+                enemy_class_name = enemy_classes[labels[idx].cpu().item()]
                 break
         else:
-            print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY  {timeout} < 30 {Fore.RESET}")
-            random_value = random.randint(1, 100)
-            turn(random_value)
-            timeout+=1
+            continue
 
-        if timeout > 30:
-            print(f"{Fore.RED} TIMEOUT NO ENEMY FOUND {Fore.RESET}")
-            break
 
-        screen = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
-        cv2.namedWindow("Screen")
-        cv2.moveWindow("Screen", -2560, 0)
-        cv2.imshow("Screen", screen)
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
+
+
+        Certainty: float = 0.5
+
+        if row[4] >= Certainty:
+            print(f"idk testing {int(row[0] * 640)} {int(row[1] * 640)} {int(row[2] * 640)} {int(row[3] * 640)}")
+
+            x1, y1, x2, y2 = int(row[0] * INPUT_WIDTH), int(row[1] * INPUT_HEIGHT), int(row[2] * INPUT_WIDTH), int(row[0] * INPUT_HEIGHT)
+            x_center = (x1 + x2) / 2
+            y_center = (y1 + y2) / 2
+
+            bbox_width = x2 - x1
+            bbox_height = y1 - y2
+            print(f"{Fore.GREEN} {x_center} {y_center} {bbox_width} {bbox_height} {Fore.LIGHTCYAN_EX} {enemy_class_name} {row[4]} {Fore.RESET}")
+
+            if 320 - 64 < x_center < 320 + 64:
+                run_forward(1)
+
+                # TODO THINK ABOUT BETTER SOLUTION TO ENVIRONMENTAL OBSTACLES
+                if random.randint(0, 100) < 5:
+                    run_backwards(0.5)
+                    if random.randint(0, 1) == 0:
+                        run_right(0.5)
+                    else:
+                        run_left(0.5)
+
+                # 20 % of screen -> finetune value
+                if (x2 - x1) > INPUT_WIDTH * 0.2:
+                    mouse_click() # click to attack enemy
+
+            elif x_center < 320 - INPUT_WIDTH * 0.1:
+                if (x_center < 320 - INPUT_WIDTH * 0.2):
+                    turn(-10)
+                else:
+                    turn(-5)
+
+            elif x_center > 320 - INPUT_WIDTH * 0.1:
+                if (x_center > 320 - INPUT_WIDTH * 0.2):
+                    turn(10)
+                else:
+                    turn(5)
+
+            else:
+                raise Exception("this value shouldn't be possible")
+
+            if check_template_exists(battle_template, screen):
+                print(f"{Fore.LIGHTCYAN_EX} FIGHT DETECTED {Fore.RESET}")
+                return True
+

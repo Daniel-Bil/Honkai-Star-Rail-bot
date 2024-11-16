@@ -61,7 +61,8 @@ def check_template_exists(template: np.ndarray, screen: np.ndarray) -> bool:
         screen:
 
     Returns:
-
+        True - yes found template
+        False - no
     """
     res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
     loc = np.where(res >= 0.8)
@@ -177,51 +178,50 @@ def move_map(direction: str, x_pos: int, y_pos: int) -> None:
 
 # TODO fix functions
 
-def turn_around():
+def turn_around() -> None:
     time.sleep(0.1)
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, 3085, 0, 0, 0)
     time.sleep(0.1)
 
 
-def turn_right():
+def turn_right() -> None:
     time.sleep(0.1)
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, 1543, 0, 0, 0)
     time.sleep(0.1)
 
 
-def turn_left():
+def turn_left() -> None:
     time.sleep(0.1)
     win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, -1543, 0, 0, 0)
     time.sleep(0.1)
 
 
-def turn(value):
+def turn(value: int) -> None:
     deg = 3085/180.
-    turn_value = deg * value
-    value = int(turn_value)
+    turn_value = int(deg * value)
     time.sleep(0.2)
-    win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, value, 0, 0, 0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, turn_value, 0, 0, 0)
     time.sleep(0.1)
 
 
-def run_forward(run_time=0.1):
+def run_forward(run_time: float = 0.1) -> None:
     keyboard.press('w')
     time.sleep(run_time)
     keyboard.release('w')
 
 
-def run_backwards(run_time=0.1):
+def run_backwards(run_time: float = 0.1) -> None:
     keyboard.press('s')
     time.sleep(run_time)
     keyboard.release('s')
 
 
-def run_right(run_time=0.1):
+def run_right(run_time: float = 0.1) -> None:
     keyboard.press('d')
     time.sleep(run_time)
     keyboard.release('d')
 
-def run_left(run_time=0.1):
+def run_left(run_time: float = 0.1) -> None:
     keyboard.press('a')
     time.sleep(run_time)
     keyboard.release('a')

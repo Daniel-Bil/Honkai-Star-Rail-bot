@@ -6,13 +6,20 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, Q
 from PySide6.QtCore import QThread, Signal, Qt, QObject
 import keyboard
 
+from battle_logic import locate_enemy_and_start_battle
 from config.Configurator import Configurator
 from graphical_functions import find_multiple_templates, get_screen
 from gui_functions import press_map, scroll, mouse_move, choose_planet, locate_template, click_template, click_position, \
     move_map, long_check_template_exists
 
 import gui_functions
+from model_functions import load_model
+
+
 # from pynput import keyboard
+
+
+
 
 class KeyPressWorker(QThread):
     quit_signal = Signal()  # Signal to notify when 'Q' is pressed
@@ -75,6 +82,11 @@ class Worker(QThread):
                     if number_of_enemies_in_location > 0:
                         valid_locations.append(current_location)
                 print(f"Valid locations: {valid_locations}")
+
+                if len(valid_locations) > 0:
+                    yolo_model = load_model(current_planet)
+                    enemy_classes = self.configurator.enemy_classes[current_planet]
+                    battle_template = self.configurator.ui_templates["start_autobattle"]
 
                 for idx, current_location in enumerate(valid_locations):
                     print(f"{idx}    CHECK {current_location} location")
@@ -150,11 +162,21 @@ class Worker(QThread):
 
                                     time.sleep(0.5)
 
-                                # TODO better fight detection
+                                result = locate_enemy_and_start_battle(yolo_model=yolo_model, enemy_classes=enemy_classes, battle_template=battle_template)
 
+                                if result:
+                                    pos1, pos2 = locate_template(battle_template)
+                                    click_template(pos1, pos2)
+                                    timeout = 0
+                                    while timeout < 1500:
+                                        timeout += 1
+                                        end_battle_result = long_check_template_exists(self.configurator.ui_templates["character_menu"], get_screen())
 
-
-
+                                        if end_battle_result:
+                                            print("battle finished")
+                                            break
+                                    else:
+                                        raise Exception("Too long in battle check what is going on")
 
 
 
