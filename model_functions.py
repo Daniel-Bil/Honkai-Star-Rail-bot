@@ -1,4 +1,5 @@
 import torch
+from colorama import Fore
 
 
 def load_model(planet: str = "Herta"):
@@ -7,6 +8,7 @@ def load_model(planet: str = "Herta"):
     :param planet: name of the planet
     :return:
     """
+    print(f"{Fore.LIGHTGREEN_EX}LOAD {planet} Model {Fore.RESET}")
     if planet == "Herta":
         model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/herta_deeplearning_200.pt')
     elif planet == "Jarilo6":

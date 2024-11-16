@@ -5,6 +5,7 @@ import cv2
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import QThread, Signal, Qt, QObject
 import keyboard
+from colorama import Fore
 
 from battle_logic import locate_enemy_and_start_battle
 from config.Configurator import Configurator
@@ -112,6 +113,13 @@ class Worker(QThread):
                             number_of_enemies_in_teleport = self.configurator.enemy_info[current_planet][current_location][teleport]["number_of_enemies"]
                             for enemy_id in range(number_of_enemies_in_teleport):
                                 print(f"teleport {teleport}")
+
+                                result = long_check_template_exists(self.configurator.ui_templates["character_menu"],
+                                                           get_screen(True))
+                                if result:
+                                    press_map()
+                                    time.sleep(0.5)
+
                                 teleport_name_template = self.configurator.location_teleports_template[current_planet][current_location][teleport]
                                 teleport2_template = self.configurator.ui_templates["teleport 2"]
                                 if "Calyx" in teleport:
@@ -120,7 +128,7 @@ class Worker(QThread):
                                 matches = find_multiple_templates(teleport2_template, get_screen())
                                 print(f" found :{len(matches)} teleports")
                                 teleport_check = 0
-                                while teleport_check < 4:
+                                while teleport_check < 3:
                                     while_escape = False
                                     for match in matches:
                                         time.sleep(1)
@@ -128,11 +136,21 @@ class Worker(QThread):
                                         click_position(match[0], match[1])
                                         time.sleep(0.5)
 
+                                        # check if teleport is close to other object so check another template
+                                        if teleport + "2" in self.configurator.location_teleports_template[current_planet][current_location]:
+                                            print(f"{Fore.LIGHTBLUE_EX} {teleport + '2'} {self.configurator.location_teleports_template[current_planet][current_location].keys()} {Fore.RESET}")
+                                            try:
+                                                x_pos, y_pos = locate_template(self.configurator.location_teleports_template[current_planet][current_location][teleport + "2"], get_screen())
+                                                click_template(x_pos, y_pos)
+                                                time.sleep(0.5)
+                                            except IndexError:
+                                                pass
+
                                         if long_check_template_exists(teleport_name_template, get_screen()):
-                                            while_escape =True
+                                            while_escape = True
                                             break
                                     else:
-                                        teleport_check+=1
+                                        teleport_check += 1
                                         directions = {0: "north", 1: "south", 2: "west", 3: "east"}
                                         move_map(directions[teleport_check], self.configurator.screen_width//2, self.configurator.screen_height//2)
                                     if while_escape:
@@ -141,17 +159,20 @@ class Worker(QThread):
                                 else:
                                     continue
 
+
+
                                 teleport_button_template = self.configurator.ui_templates["teleport"]
+
                                 while True:
                                     if long_check_template_exists(teleport_button_template, get_screen()):
                                         break
                                 x_pos, y_pos = locate_template(teleport_button_template, get_screen())
                                 click_template(x_pos, y_pos)
 
-                                time.sleep(1)
+
 
                                 moves = self.configurator.enemy_info[current_planet][current_location][teleport]["moves"][enemy_id]
-
+                                time.sleep(2)
                                 for move in moves:
                                     function_to_call = getattr(gui_functions, move["move"])
                                     print(f"{move['move']}({str([f'{arg}, ' for arg in move['args']])})")
@@ -165,7 +186,7 @@ class Worker(QThread):
                                 result = locate_enemy_and_start_battle(yolo_model=yolo_model, enemy_classes=enemy_classes, battle_template=battle_template)
 
                                 if result:
-                                    pos1, pos2 = locate_template(battle_template)
+                                    pos1, pos2 = locate_template(battle_template, get_screen())
                                     click_template(pos1, pos2)
                                     timeout = 0
                                     while timeout < 1500:
@@ -173,7 +194,7 @@ class Worker(QThread):
                                         end_battle_result = long_check_template_exists(self.configurator.ui_templates["character_menu"], get_screen())
 
                                         if end_battle_result:
-                                            print("battle finished")
+                                            print(f"{Fore.LIGHTCYAN_EX}BATTLE FINISHED{Fore.RESET}")
                                             break
                                     else:
                                         raise Exception("Too long in battle check what is going on")

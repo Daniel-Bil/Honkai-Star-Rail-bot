@@ -11,49 +11,23 @@ from wrappers import print_function_name
 INPUT_WIDTH = 640
 INPUT_HEIGHT = 640
 
-def w84endbattle():
-    while True:
-        img = get_image()
-        battle = check_if_endbattle(img)
-        time.sleep(3)
-        if battle:
-            print(f"{Fore.LIGHTRED_EX} END BATTLE {Fore.RESET}")
-            break
-        print("STILL IN BATTLE")
-
-def check_if_endbattle(image):
-    rgbs = []
-    for i in range(3):
-
-        cord = out_of_battle_cord_dict[f"icon{i+1}"]
-        cropped = crop(image, cord)
-        rgb = cropped
-        rgbs.append(rgb)
-    v = 0
-    for rgb in rgbs:
-        print(rgb)
-        if (rgb > 200).all():
-            v+=1
-
-    if v == 3:
-        return True
-    else:
-        return False
-
 
 @print_function_name
 def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_template) -> bool:
     timeout = 0
-
+    last_check_was_enemy = False
     while True:
-        timeout -= 1  # every check increase timeout
 
-        if (timeout < -50) or (timeout > 50):
+
+        if (timeout < -50) or (timeout > 100):
             print(f"{Fore.RED} TIMEOUT NO ENEMY FOUND {Fore.RESET}")
             return False
 
-
         screen = get_screen()
+
+        if check_template_exists(battle_template, screen):
+            print(f"{Fore.LIGHTCYAN_EX} FIGHT DETECTED {Fore.RESET}")
+            return True
 
         resized_screen = cv2.resize(screen, (640, 640))
 
@@ -63,40 +37,49 @@ def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_templa
 
         number_of_detections = len(labels)
 
+        print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY  timeout: -50 < {timeout} < 100 | detections: {number_of_detections} {Fore.RESET} ")
+
         if number_of_detections < 1:
-            print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY  timeout: {timeout} < 30 | detections: {number_of_detections} {Fore.RESET} ")
-            random_value = random.randint(1, 90)
+            timeout -= 1  # every check increase timeout
+
+
+
+            random_value = random.randint(1, 50)
+            if last_check_was_enemy:
+                last_check_was_enemy = False
+                random_value /= 10
+
+
             turn(random_value)
-            timeout += 1
             continue
+
 
         # some labels are not enemies but model knows them because it can be a mistake
         for idx, cord in enumerate(cords):
             if not (int(labels[idx].cpu().item()) == 13 or int(labels[idx].cpu().item()) == 14):
                 row = cords[idx]
-                enemy_class_name = enemy_classes[labels[idx].cpu().item()]
+                enemy_class_name = enemy_classes[str(int(labels[idx].cpu().item()))]
                 break
         else:
             continue
 
-
+        timeout += 1
 
 
         Certainty: float = 0.5
 
         if row[4] >= Certainty:
-            print(f"idk testing {int(row[0] * 640)} {int(row[1] * 640)} {int(row[2] * 640)} {int(row[3] * 640)}")
-
+            last_check_was_enemy = True
             x1, y1, x2, y2 = int(row[0] * INPUT_WIDTH), int(row[1] * INPUT_HEIGHT), int(row[2] * INPUT_WIDTH), int(row[0] * INPUT_HEIGHT)
             x_center = (x1 + x2) / 2
             y_center = (y1 + y2) / 2
 
             bbox_width = x2 - x1
             bbox_height = y1 - y2
-            print(f"{Fore.GREEN} {x_center} {y_center} {bbox_width} {bbox_height} {Fore.LIGHTCYAN_EX} {enemy_class_name} {row[4]} {Fore.RESET}")
+            print(f"{Fore.GREEN} {x_center} {y_center} {bbox_width} {bbox_height} {Fore.LIGHTCYAN_EX} {enemy_class_name} prob: {row[4]:^.3} {Fore.RESET}")
 
             if 320 - 64 < x_center < 320 + 64:
-                run_forward(1)
+                run_forward(0.7)
 
                 # TODO THINK ABOUT BETTER SOLUTION TO ENVIRONMENTAL OBSTACLES
                 if random.randint(0, 100) < 5:
@@ -106,8 +89,8 @@ def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_templa
                     else:
                         run_left(0.5)
 
-                # 20 % of screen -> finetune value
-                if (x2 - x1) > INPUT_WIDTH * 0.2:
+                # 12 % of screen -> finetune value
+                if bbox_width > INPUT_WIDTH * 0.12:
                     mouse_click() # click to attack enemy
 
             elif x_center < 320 - INPUT_WIDTH * 0.1:
@@ -123,9 +106,7 @@ def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_templa
                     turn(5)
 
             else:
-                raise Exception("this value shouldn't be possible")
+                print("fight started probably")
 
-            if check_template_exists(battle_template, screen):
-                print(f"{Fore.LIGHTCYAN_EX} FIGHT DETECTED {Fore.RESET}")
-                return True
+
 

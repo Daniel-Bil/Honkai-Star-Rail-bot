@@ -160,16 +160,15 @@ def move_map(direction: str, x_pos: int, y_pos: int) -> None:
     pyautogui.sleep(0.1)
 
     if direction == "north":
-        mouse_move(x_pos, y_pos+100)
+        pyautogui.dragTo(x_pos, y_pos + 150, duration=0.1)
 
     elif direction == "south":
-        mouse_move(x_pos, y_pos-100)
+        pyautogui.dragTo(x_pos, y_pos - 150, duration=0.1)
 
     elif direction == "west":
-        mouse_move(x_pos + 100, y_pos)
-
+        pyautogui.dragTo(x_pos + 150, y_pos, duration=0.1)
     elif direction == "east":
-        mouse_move(x_pos - 100, y_pos)
+        pyautogui.dragTo(x_pos - 150, y_pos, duration=0.1)
 
     else:
         raise Exception("wrong direction")

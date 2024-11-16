@@ -2,7 +2,7 @@
   "Herta": {
     "Base Zone": {
       "Monitoring Room": {"number_of_enemies": 1, "moves": [
-          [{"move": "turn_around", "args": []},{"move": "run_forward", "args": [2]}]
+          [{"move": "turn_around", "args": []},{"move": "run_forward", "args": [2]}, {"move":  "turn", "args": [-15]}]
         ]},
       "Reception Center": {"number_of_enemies": 0}
     },
@@ -15,10 +15,10 @@
     },
     "Storage Zone": {
       "Calyx (Crimson) Bud of Destruction": {"number_of_enemies": 2, "moves": [
-          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [5]}],
-          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [5]}]
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [4]}],
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [6]},{"move":  "run_right", "args": [5]},{"move":  "run_backwards", "args": [10]},{"move":  "run_right", "args": [2.5]},{"move":  "run_forward", "args": [3]}]
         ]},
-      "Courtyard (First Floor)": {"number_of_enemies": 2, "moves": [[],[]]},
+      "Courtyard (First Floor)": {"number_of_enemies": 2, "moves": [[{"move":  "run_forward", "args": [1]}],[]]},
       "Outside the Control Center (First Floor)": {"number_of_enemies": 2, "moves": [
           [],
           [{"move":  "run_forward", "args": [4]}, {"move":  "turn", "args": [-30]}, {"move":  "run_forward", "args": [4]}]
