@@ -95,8 +95,8 @@ def locate_template(template: np.ndarray, screen: np.ndarray) -> tuple[int, int]
 def long_check_template_exists(template: np.ndarray, screen: np.ndarray) -> bool:
     number_of_checks = 0
     number_of_hits = 0
-    while number_of_checks < 5:
-        if number_of_checks > 5:
+    while number_of_checks < 3:
+        if number_of_checks > 2:
             print("Template missing")
             return False
 
@@ -111,7 +111,7 @@ def long_check_template_exists(template: np.ndarray, screen: np.ndarray) -> bool
         else:
             number_of_checks += 1
 
-        time.sleep(0.5)
+        time.sleep(0.4)
     else:
         return False
 
@@ -160,22 +160,21 @@ def move_map(direction: str, x_pos: int, y_pos: int) -> None:
     pyautogui.sleep(0.1)
 
     if direction == "north":
-        pyautogui.dragTo(x_pos, y_pos + 150, duration=0.1)
+        pyautogui.dragTo(x_pos, y_pos + 150, duration=0.2)
 
     elif direction == "south":
-        pyautogui.dragTo(x_pos, y_pos - 150, duration=0.1)
+        pyautogui.dragTo(x_pos, y_pos - 150, duration=0.2)
 
     elif direction == "west":
-        pyautogui.dragTo(x_pos + 150, y_pos, duration=0.1)
+        pyautogui.dragTo(x_pos + 150, y_pos, duration=0.2)
     elif direction == "east":
-        pyautogui.dragTo(x_pos - 150, y_pos, duration=0.1)
+        pyautogui.dragTo(x_pos - 150, y_pos, duration=0.2)
 
     else:
         raise Exception("wrong direction")
     pyautogui.mouseUp()
     pyautogui.sleep(0.1)
 
-# TODO fix functions
 
 def turn_around() -> None:
     time.sleep(0.1)
@@ -224,3 +223,11 @@ def run_left(run_time: float = 0.1) -> None:
     keyboard.press('a')
     time.sleep(run_time)
     keyboard.release('a')
+
+def press_keyboard(key: str = "f") -> None:
+    keyboard.press(f'{key}')
+    time.sleep(0.1)
+    keyboard.release(f'{key}')
+
+def wait(wait_time: float = 1):
+    time.sleep(wait_time)

@@ -16,21 +16,21 @@
     "Storage Zone": {
       "Calyx (Crimson) Bud of Destruction": {"number_of_enemies": 2, "moves": [
           [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [4]}],
-          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [6]},{"move":  "run_right", "args": [5]},{"move":  "run_backwards", "args": [10]},{"move":  "run_right", "args": [2.5]},{"move":  "run_forward", "args": [3]}]
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [6]},{"move":  "run_right", "args": [4.5]},{"move":  "run_backwards", "args": [9]},{"move":  "run_right", "args": [2.5]},{"move":  "run_forward", "args": [3]}]
         ]},
       "Courtyard (First Floor)": {"number_of_enemies": 2, "moves": [[{"move":  "run_forward", "args": [1]}],[]]},
       "Outside the Control Center (First Floor)": {"number_of_enemies": 2, "moves": [
-          [],
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [1]}],
           [{"move":  "run_forward", "args": [4]}, {"move":  "turn", "args": [-30]}, {"move":  "run_forward", "args": [4]}]
         ]},
       "Special Purpose Lab (Second Floor)": {"number_of_enemies": 1, "moves": [
-        [{"move":  "turn", "args": [-135]}, {"move":  "run_forward", "args": [6]}, {"move":  "turn", "args": [35]}, {"move":  "run_forward", "args": [8]}]
+        [{"move":  "turn", "args": [-125]}, {"move":  "run_forward", "args": [6]}, {"move":  "turn", "args": [35]}, {"move":  "run_forward", "args": [8]}]
       ]}
     },
     "Supply Zone": {
       "Calyx (Crimson) Bud of Preservation": {"number_of_enemies": 2, "moves": [
-        [{"move":  "turn", "args": [-162]}, {"move": "run_forward", "args": [3.5]}, {"move": "press_keyboard", "args": ["f"]}, {"move": "run_forward", "args": [1.5]}],
-        [{"move":  "turn", "args": [-162]}, {"move": "run_forward", "args": [3.5]}, {"move": "press_keyboard", "args": ["f"]}, {"move": "run_forward", "args": [1.5]}, {"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [5]}]
+        [{"move":  "turn", "args": [-162]}, {"move": "run_forward", "args": [3.5]}, {"move": "press_keyboard", "args": ["f"]},{"move": "wait", "args": [1]}, {"move": "run_forward", "args": [1.5]}],
+        [{"move":  "turn", "args": [-162]}, {"move": "run_forward", "args": [3.5]}, {"move": "press_keyboard", "args": ["f"]},{"move": "wait", "args": [1]}, {"move": "run_forward", "args": [1.5]}, {"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [5]}]
       ]},
       "Electrical Room": {"number_of_enemies": 2, "moves": [
         [],
@@ -42,4 +42,5 @@
       ]}
     }
   }
+
 }
