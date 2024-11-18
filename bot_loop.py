@@ -17,11 +17,6 @@ import gui_functions
 from model_functions import load_model
 
 
-# from pynput import keyboard
-
-
-
-
 class KeyPressWorker(QThread):
     quit_signal = Signal()  # Signal to notify when 'Q' is pressed
 
@@ -68,12 +63,14 @@ class Worker(QThread):
 
             planets = list(self.configurator.enemy_info.keys())
             for current_planet in planets:
+                if current_planet == "Herta":
+                    continue
                 print(f"START {current_planet}")
                 locations = list(self.configurator.enemy_info[current_planet].keys())
 
 
                 #1. choose planet
-                choose_planet(template_button=self.configurator.ui_templates["Star Rail Map"], template_planet=self.configurator.planet_templates["Herta"])
+                choose_planet(template_button=self.configurator.ui_templates["Star Rail Map"], template_planet=self.configurator.planet_templates[current_planet])
 
                 #2. find valid locations
                 valid_locations = []
@@ -98,106 +95,121 @@ class Worker(QThread):
                         press_map()
                         time.sleep(0.5)
 
-                    while True:
-                        location_template = self.configurator.planet_locations_template[current_planet][current_location]
-                        if not long_check_template_exists(location_template, get_screen()):
-                            print("break")
-                            break
-                        # TODO add scrolling to find location
-                        position = locate_template(location_template, get_screen())
-                        click_template(position[0], position[1])
-                        time.sleep(1)
 
-                        teleports = list(self.configurator.enemy_info[current_planet][current_location].keys())
-                        for teleport in teleports:
-                            number_of_enemies_in_teleport = self.configurator.enemy_info[current_planet][current_location][teleport]["number_of_enemies"]
-                            for enemy_id in range(number_of_enemies_in_teleport):
-                                print(f"teleport {teleport}")
+                    location_template = self.configurator.planet_locations_template[current_planet][current_location]
 
-                                result = long_check_template_exists(self.configurator.ui_templates["character_menu"],
-                                                           get_screen(True))
-                                if result:
-                                    press_map()
+                    print(f"looking for {Fore.LIGHTMAGENTA_EX}{current_location}{Fore.RESET} template ")
+                    if not long_check_template_exists(location_template, get_screen()):
+                        print(f"{Fore.LIGHTRED_EX} Didn't find location so scroll {Fore.RESET}")
+                        mouse_move(2400, 700)
+                        scroll(up=False)
+
+                    if not long_check_template_exists(location_template, get_screen()):
+                        print(f"{Fore.LIGHTRED_EX} Didn't find location so go to another{Fore.RESET}")
+                        break
+
+                    position = locate_template(location_template, get_screen())
+                    click_template(position[0], position[1])
+                    time.sleep(1)
+
+                    teleports = list(self.configurator.enemy_info[current_planet][current_location].keys())
+                    for teleport in teleports:
+                        number_of_enemies_in_teleport = self.configurator.enemy_info[current_planet][current_location][teleport]["number_of_enemies"]
+                        for enemy_id in range(number_of_enemies_in_teleport):
+                            print(f"teleport {teleport}")
+
+                            result = long_check_template_exists(self.configurator.ui_templates["character_menu"],
+                                                       get_screen(True))
+                            if result:
+                                press_map()
+                                time.sleep(0.5)
+
+                            teleport_name_template = self.configurator.location_teleports_template[current_planet][current_location][teleport]
+                            teleport2_template = self.configurator.ui_templates["teleport 2"]
+                            if "Calyx" in teleport:
+                                teleport2_template = self.configurator.ui_templates["calyx"]
+
+                            if "Caver of Corrosion" in teleport:
+                                teleport2_template = self.configurator.ui_templates["Caver of Corrosion"]
+
+                            if "Stagnant Shadow" in teleport:
+                                teleport2_template = self.configurator.ui_templates["Stagnant Shadow"]
+
+                            matches = find_multiple_templates(teleport2_template, get_screen())
+                            print(f" found :{len(matches)} teleports")
+                            teleport_check = 0
+                            while teleport_check < 3:
+                                while_escape = False
+                                for match in matches:
+                                    time.sleep(1)
+                                    print(f"will click {match[0]},  {match[1]} pos")
+                                    click_position(match[0], match[1])
                                     time.sleep(0.5)
 
-                                teleport_name_template = self.configurator.location_teleports_template[current_planet][current_location][teleport]
-                                teleport2_template = self.configurator.ui_templates["teleport 2"]
-                                if "Calyx" in teleport:
-                                    teleport2_template = self.configurator.ui_templates["calyx"]
+                                    # check if teleport is close to other object so check another template
+                                    if teleport + "2" in self.configurator.location_teleports_template[current_planet][current_location]:
+                                        print(f"{Fore.LIGHTBLUE_EX} {teleport + '2'} {self.configurator.location_teleports_template[current_planet][current_location].keys()} {Fore.RESET}")
+                                        try:
+                                            x_pos, y_pos = locate_template(self.configurator.location_teleports_template[current_planet][current_location][teleport + "2"], get_screen())
+                                            click_template(x_pos, y_pos)
+                                            time.sleep(0.5)
+                                        except IndexError:
+                                            pass
 
-                                matches = find_multiple_templates(teleport2_template, get_screen())
-                                print(f" found :{len(matches)} teleports")
-                                teleport_check = 0
-                                while teleport_check < 3:
-                                    while_escape = False
-                                    for match in matches:
-                                        time.sleep(1)
-                                        print(f"will click {match[0]},  {match[1]} pos")
-                                        click_position(match[0], match[1])
-                                        time.sleep(0.5)
-
-                                        # check if teleport is close to other object so check another template
-                                        if teleport + "2" in self.configurator.location_teleports_template[current_planet][current_location]:
-                                            print(f"{Fore.LIGHTBLUE_EX} {teleport + '2'} {self.configurator.location_teleports_template[current_planet][current_location].keys()} {Fore.RESET}")
-                                            try:
-                                                x_pos, y_pos = locate_template(self.configurator.location_teleports_template[current_planet][current_location][teleport + "2"], get_screen())
-                                                click_template(x_pos, y_pos)
-                                                time.sleep(0.5)
-                                            except IndexError:
-                                                pass
-
-                                        if long_check_template_exists(teleport_name_template, get_screen()):
-                                            while_escape = True
-                                            break
-                                    else:
-                                        teleport_check += 1
-                                        directions = {0: "north", 1: "south", 2: "west", 3: "east"}
-                                        move_map(directions[teleport_check], self.configurator.screen_width//2, self.configurator.screen_height//2)
-                                    if while_escape:
-                                        print(f"found {teleport} teleport")
+                                    if long_check_template_exists(teleport_name_template, get_screen()):
+                                        while_escape = True
                                         break
                                 else:
-                                    continue
+                                    teleport_check += 1
+                                    directions = {0: "north", 1: "south", 2: "west", 3: "east"}
+                                    move_map(directions[teleport_check], self.configurator.screen_width//2, self.configurator.screen_height//2)
+                                if while_escape:
+                                    print(f"found {teleport} teleport")
+                                    break
+                            else:
+                                continue
 
 
 
-                                teleport_button_template = self.configurator.ui_templates["teleport"]
+                            teleport_button_template = self.configurator.ui_templates["teleport"]
 
-                                while True:
-                                    if long_check_template_exists(teleport_button_template, get_screen()):
+                            while True:
+                                if long_check_template_exists(teleport_button_template, get_screen()):
+                                    break
+                            x_pos, y_pos = locate_template(teleport_button_template, get_screen())
+                            click_template(x_pos, y_pos)
+
+
+
+                            moves = self.configurator.enemy_info[current_planet][current_location][teleport]["moves"][enemy_id]
+                            time.sleep(2)
+                            #TODO improve end of battle to locate another enemy without doing the same moves again
+                            for move in moves:
+                                function_to_call = getattr(gui_functions, move["move"])
+                                print(f"{move['move']}({str([f'{arg}, ' for arg in move['args']])})")
+                                if move["args"]:
+                                    function_to_call(*move["args"])
+                                else:
+                                    function_to_call()
+
+                                time.sleep(0.5)
+
+                            result = locate_enemy_and_start_battle(yolo_model=yolo_model, enemy_classes=enemy_classes, battle_template=battle_template)
+
+                            if result:
+                                print(f"{Fore.CYAN}Fight Started{Fore.RESET}")
+                                pos1, pos2 = locate_template(battle_template, get_screen())
+                                click_template(pos1, pos2)
+                                timeout = 0
+                                while timeout < 1500:
+                                    timeout += 1
+                                    end_battle_result = long_check_template_exists(self.configurator.ui_templates["character_menu"], get_screen())
+                                    print(f"Fight timeout = {timeout} < 1500")
+                                    if end_battle_result:
+                                        print(f"{Fore.LIGHTCYAN_EX}BATTLE FINISHED{Fore.RESET}")
                                         break
-                                x_pos, y_pos = locate_template(teleport_button_template, get_screen())
-                                click_template(x_pos, y_pos)
-
-
-
-                                moves = self.configurator.enemy_info[current_planet][current_location][teleport]["moves"][enemy_id]
-                                time.sleep(2)
-                                for move in moves:
-                                    function_to_call = getattr(gui_functions, move["move"])
-                                    print(f"{move['move']}({str([f'{arg}, ' for arg in move['args']])})")
-                                    if move["args"]:
-                                        function_to_call(*move["args"])
-                                    else:
-                                        function_to_call()
-
-                                    time.sleep(0.5)
-
-                                result = locate_enemy_and_start_battle(yolo_model=yolo_model, enemy_classes=enemy_classes, battle_template=battle_template)
-
-                                if result:
-                                    pos1, pos2 = locate_template(battle_template, get_screen())
-                                    click_template(pos1, pos2)
-                                    timeout = 0
-                                    while timeout < 1500:
-                                        timeout += 1
-                                        end_battle_result = long_check_template_exists(self.configurator.ui_templates["character_menu"], get_screen())
-
-                                        if end_battle_result:
-                                            print(f"{Fore.LIGHTCYAN_EX}BATTLE FINISHED{Fore.RESET}")
-                                            break
-                                    else:
-                                        raise Exception("Too long in battle check what is going on")
+                                else:
+                                    raise Exception("Too long in battle check what is going on")
 
 
 

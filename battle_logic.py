@@ -86,6 +86,12 @@ def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_templa
             enemy_widths.append(bbox_width)
             print(f"{Fore.GREEN} x_c={x_center} y_c={y_center} width={bbox_width} height={bbox_height} {Fore.LIGHTCYAN_EX} {enemy_class_name} {Fore.LIGHTMAGENTA_EX} {row[4]*100:^.2} % {Fore.RESET}")
 
+            # 12 % of screen -> finetune value
+            print(f"{bbox_width} > {INPUT_WIDTH * 0.08}")
+            if bbox_width > INPUT_WIDTH * 0.08:
+                mouse_click()  # click to attack enemy
+
+
             if (INPUT_WIDTH//2) * 0.7 < x_center < (INPUT_WIDTH//2) * 1.3:
                 run_forward(0.7)
 
@@ -102,10 +108,7 @@ def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_templa
                             run_left(0.6)
                         enemy_widths = []
 
-                # 12 % of screen -> finetune value
-                print(f"{bbox_width} > {INPUT_WIDTH * 0.06}")
-                if bbox_width > INPUT_WIDTH * 0.06:
-                    mouse_click() # click to attack enemy
+
 
             elif x_center < 320 - INPUT_WIDTH * 0.1:
                 if (x_center < 320 - INPUT_WIDTH * 0.2):
