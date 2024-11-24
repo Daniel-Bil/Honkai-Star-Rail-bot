@@ -63,8 +63,8 @@ class Worker(QThread):
 
             planets = list(self.configurator.enemy_info.keys())
             for current_planet in planets:
-                if current_planet == "Herta":
-                    continue
+                # if current_planet == "Herta":
+                #     continue
                 print(f"START {current_planet}")
                 locations = list(self.configurator.enemy_info[current_planet].keys())
 

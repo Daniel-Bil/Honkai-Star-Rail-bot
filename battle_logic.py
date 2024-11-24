@@ -98,7 +98,7 @@ def locate_enemy_and_start_battle(yolo_model, enemy_classes: dict, battle_templa
                 if len(enemy_widths) > 4:
                     mean = np.mean(enemy_widths[-5:-1])
 
-                    if mean - 2 < bbox_width < mean + 2:
+                    if mean - 1 < bbox_width < mean + 1:
                         print(f"{mean - 2} < {bbox_width} < {mean + 2}")
                         print(f"{enemy_widths[-5:-1]}, {mean}")
                         run_backwards(0.4)
