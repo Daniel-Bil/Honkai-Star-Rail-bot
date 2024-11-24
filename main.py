@@ -17,7 +17,6 @@ import torch
 import win32api, win32con
 from pynput.mouse import Button, Controller
 
-from Class1.lvl_class import LVL
 # from Herta_lvl import play
 from dictionaries import in_battle_skillpoint_dict, out_of_battle_cord_dict, Cord, Herta_Space_Station_dict, \
     Storage_Zone_dict, Base_Zone_dict, Supply_Zone_dict, star_map_dict, Jarilo_VI_dict, Outlying_Snow_Plains, \
@@ -25,6 +24,8 @@ from dictionaries import in_battle_skillpoint_dict, out_of_battle_cord_dict, Cor
 from gui import press_map, right, left, przod, tyl, turn_around, turn_right, turn_left, start_autobattle, turn, \
     press_map2, click_cords, attack, mouse_move, mouse_move2, press_keyboard, scroll
 from utilities import show_images
+from wrappers import print_function_name
+
 colors = {0: (0,255,0),
           1: (46,139,87),
           2: (0,139,139),
@@ -220,14 +221,16 @@ def check_if_endbattle(image):
         return False
 
 
-def get_image(convert=True, place="all", gray=False):
-    """
+def get_screen(gray: bool = False) -> np.ndarray:
+    pil_image = PIL.ImageGrab.grab()
+    np_image = np.array(pil_image)
+    if gray:
+        np_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2GRAY)
+    return np_image
 
-    :param convert:
-    :param place:
-    :param gray:
-    :return:
-    """
+
+def get_image(convert=True, place="all", gray=False):
+
     if place == "all":
         im = PIL.ImageGrab.grab()
     elif place == "map":
@@ -411,10 +414,10 @@ def load_model(planet: str="Herta"):
     :return:
     """
     if planet == "Herta":
-        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/herta_newest.pt')
+        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/herta_deeplearning_200.pt')
     elif planet == "Jarilo6":
-        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/jarilo6.pt')
-    elif planet == "xianhou":
+        model = torch.hub.load(f'ultralytics/yolov5', 'custom', path=f'E:/Honkai-Star-Rail-bot/model/jarilo4.pt')
+    elif planet == "xianzhou":
         # model = torch.hub.load(f'ultralytics/yolov5', 'custom',
         #                        path=f'E:/Honkai-Star-Rail-bot/model/hertaSpaceStation.pt')
         raise Exception("Not implemented model")
@@ -493,8 +496,11 @@ def locate_enemy_and_start_battle(model, c_t_l= None):
                     leb = labels[h].cpu()
 
                     cv2.rectangle(screen, (x1, y1), (x2, y2), colors[0], 2)
-                    cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+                    try:
+                        cv2.putText(screen, f"{c_t_l[int(leb.item())]} {row[4]}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
                                 (0, 255, 0), 2)
+                    except:
+                        pass
             else:
                 print(f"{Fore.LIGHTMAGENTA_EX} LOOKING FOR ENEMY inside {timeout} < 60 {Fore.RESET}")
                 random_value = random.randint(0, 1)
@@ -546,6 +552,49 @@ def tp_parlor():
     ############### FIRST TP ##############################
     Cord(977, 978, 676, 677).move_and_click_cord()
     tp_cord.move_and_click_cord(slow5=4)
+@print_function_name
+def long_check_template_exists(template: np.ndarray, screen: np.ndarray) -> bool:
+    number_of_checks = 0
+    number_of_hits = 0
+    while number_of_checks < 5:
+        if number_of_checks > 5:
+            print("Template missing")
+            return False
+
+        if number_of_hits > 2:
+            print("Template found")
+            return True
+
+        result = check_template_exists(template, screen)
+
+        if result:
+            number_of_hits += 1
+        else:
+            number_of_checks += 1
+
+        time.sleep(1)
+
+
+
+@print_function_name
+def check_template_exists(template: np.ndarray, screen: np.ndarray) -> bool:
+    res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+    loc = np.where(res >= 0.8)
+    if loc[0].any():
+        return True
+    return False
+
+@print_function_name
+def return_template_location(template: np.ndarray, screen: np.ndarray) -> tuple[int, int]:
+    w, h = template.shape[::-1]
+    res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+    loc = np.where(res >= 0.8)
+
+    p1, p2 = loc[::-1]
+
+    return p1[0] + w/2, p2[0] + h/2
+
+
 def wait_for_template(template):
     time.sleep(1)
     print("w8 for template")
@@ -566,7 +615,7 @@ def locate_template(template):
     image = get_image(gray=True)
 
     res = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(res >= 0.8)
+    loc = np.where(res >= 0.85)
     p1, p2 = loc[::-1]
     if len(p1)>1:
         return p1[0], p2[0]
@@ -575,12 +624,18 @@ def combine1(template):
     print(f"{Fore.GREEN}Combine1{Fore.RESET}")
     wait_for_template(template)
     cord = locate_template(template)
-    c = Cord(*cord)
+    w, h = template.shape[::-1]
+    c = Cord(cord[0]+w//2, cord[1]+h//2)
     c.move_and_click_cord()
+    time.sleep(2)
 
 
 
 if __name__ == '__main__':
+
+
+
+
 
 
     time.sleep(2)
@@ -802,7 +857,7 @@ if __name__ == '__main__':
     press_map2()
     click_cords(Cord(2399, 2400, 183, 184), slow=2)
     print("jarilo6")
-    mouse_move((star_map_dict["Jarilo-VI"].x1,star_map_dict["Jarilo-VI"].y1))
+    mouse_move((star_map_dict["Jarilo-VI"].x1, star_map_dict["Jarilo-VI"].y1))
     # mouse_move2()
 
 

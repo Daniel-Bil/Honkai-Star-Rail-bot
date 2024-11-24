@@ -1,0 +1,141 @@
+{
+  "Herta": {
+    "Base Zone": {
+      "Monitoring Room": {"number_of_enemies": 1, "moves": [
+          [{"move": "turn_around", "args": []},{"move": "run_forward", "args": [2]}, {"move":  "turn", "args": [-15]}]
+        ]},
+      "Reception Center": {"number_of_enemies": 0}
+    },
+
+    "Seclusion Zone": {
+      "Breeding Ground": {"number_of_enemies": 0},
+      "Distribution Center": {"number_of_enemies": 0},
+      "Incubator": {"number_of_enemies": 0},
+      "Pharmaceutical Room": {"number_of_enemies": 0}
+    },
+    "Storage Zone": {
+      "Calyx (Crimson) Bud of Destruction": {"number_of_enemies": 2, "moves": [
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [4]}],
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [6]},{"move":  "run_right", "args": [4.5]},{"move":  "run_backwards", "args": [9]},{"move":  "run_right", "args": [2.5]},{"move":  "run_forward", "args": [3]}]
+        ]},
+      "Courtyard (First Floor)": {"number_of_enemies": 2, "moves": [[{"move":  "run_forward", "args": [1]}],[]]},
+      "Outside the Control Center (First Floor)": {"number_of_enemies": 2, "moves": [
+          [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [1]}],
+          [{"move":  "run_forward", "args": [4]}, {"move":  "turn", "args": [-30]}, {"move":  "run_forward", "args": [4]}]
+        ]},
+      "Special Purpose Lab (Second Floor)": {"number_of_enemies": 1, "moves": [
+        [{"move":  "turn", "args": [-125]}, {"move":  "run_forward", "args": [6]}, {"move":  "turn", "args": [35]}, {"move":  "run_forward", "args": [8]}]
+      ]}
+    },
+    "Supply Zone": {
+      "Calyx (Crimson) Bud of Preservation": {"number_of_enemies": 2, "moves": [
+        [{"move":  "turn", "args": [-162]}, {"move": "run_forward", "args": [3.5]}, {"move": "press_keyboard", "args": ["f"]},{"move": "wait", "args": [1]}, {"move": "run_forward", "args": [1.5]}],
+        [{"move":  "turn", "args": [-162]}, {"move": "run_forward", "args": [3.5]}, {"move": "press_keyboard", "args": ["f"]},{"move": "wait", "args": [1]}, {"move": "run_forward", "args": [1.5]}, {"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [5]}]
+      ]},
+      "Electrical Room": {"number_of_enemies": 2, "moves": [
+        [],
+        [{"move": "run_forward", "args": [10]}, {"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [5]}]
+      ]},
+      "Railway Platform": {"number_of_enemies": 0},
+      "Spare Parts Warehouse": {"number_of_enemies": 1, "moves": [
+        [{"move": "run_forward", "args": [5]}]
+      ]}
+    }
+  },
+  "JariloVI": {
+    "Outlying Snow Plains": {
+      "Calyx (Golden) Bud of Memories": {"number_of_enemies": 1, "moves": [
+        [{"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [2]}]]},
+      "Calyx (Crimson) Bud of The Hunt": {"number_of_enemies": 3, "moves": [
+        [{"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [10]}],
+        [{"move":  "turn", "args": [-90]}, {"move": "run_forward", "args": [10]}],
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [10]}]
+      ]}
+    },
+    "Backwater Pass": {
+      "Transport Hub": {"number_of_enemies": 3, "moves": [
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [8]}, {"move": "turn", "args": [90]}, {"move": "run_forward", "args": [5]}],
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [10]}],
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [10]}, {"move": "turn", "args": [-90]}, {"move": "run_forward", "args": [3]}]
+      ]},
+      "Leisure Plaza": {"number_of_enemies": 1, "moves": [
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [3]}]
+      ]},
+      "Calyx (Crimson) Bud of Abundance": {"number_of_enemies": 1, "moves": [
+        [{"move":  "turn", "args": [-80]}, {"move": "run_forward", "args": [5]}]
+      ]},
+      "Calyx (Golden) Bud of Aether": {"number_of_enemies": 1, "moves": [
+        [{"move":  "turn", "args": [-100]}, {"move": "run_forward", "args": [6]}]
+      ]}
+    },
+    "Corridor of Fading Echoes": {
+      "Ancient Battlefield Frontline": {"number_of_enemies": 4, "moves": [
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [6]}],
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [6]},{"move": "turn", "args": [90]}, {"move": "run_forward", "args": [7]},{"move": "turn", "args": [-90]},{"move": "run_forward", "args": [6]}],
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [6]},{"move": "turn", "args": [90]}, {"move": "run_forward", "args": [7]},{"move": "turn", "args": [-90]},{"move": "run_forward", "args": [6]}],
+        [{"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [7]},{"move": "turn", "args": [-45]}, {"move": "run_forward", "args": [8]}]
+      ]},
+      "Command Center": {"number_of_enemies": 2, "moves": [
+        [{"move": "run_forward", "args": [5]}],
+        [{"move": "run_forward", "args": [5]}]
+      ]},
+      "Stagnant Shadow Shape of Fulmination": {"number_of_enemies": 2, "moves": [
+        [{"move": "turn", "args": [-100]}, {"move": "run_forward", "args": [7]}, {"move": "turn", "args": [15]}, {"move": "run_forward", "args": [5]}],
+        [{"move": "turn", "args": [-40]}, {"move": "run_forward", "args": [6]}, {"move": "turn", "args": [-40]}, {"move": "run_forward", "args": [4]}, {"move": "turn", "args": [80]}, {"move": "run_forward", "args": [9]}]
+      ]},
+      "Cavern of Corrosion Path of Drifting": {"number_of_enemies": 1, "moves": [
+        [{"move": "turn", "args": [135]}, {"move": "run_forward", "args": [9]}]
+      ]}
+    },
+    "Everwinter Hill": {
+      "Cavern od Corrosion Path of Providence": {"number_of_enemies": 2, "moves": [
+        [{"move": "turn", "args": [-100]}, {"move": "run_forward", "args": [7]}],
+        [{"move": "turn", "args": [-100]}, {"move": "run_forward", "args": [7]}, {"move": "turn", "args": [30]}, {"move": "run_forward", "args": [5]}]
+      ]},
+      "Ancient Battlefield Snow Plains": {"number_of_enemies": 1, "moves": [
+        [{"move": "turn", "args": [10]}, {"move": "run_forward", "args": [9]}, {"move": "turn", "args": [-90]}, {"move": "run_forward", "args": [10]}]
+      ]}
+    },
+    "Great Mine": {
+      "Stagnant Shadow Shape of Spike": {"number_of_enemies": 3, "moves": [
+        [{"move": "turn", "args": [-50]}, {"move": "run_forward", "args": [5]}, {"move": "turn", "args": [-30]}, {"move": "run_forward", "args": [3]}],
+        [{"move": "turn", "args": [-50]}, {"move": "run_forward", "args": [5]}, {"move": "turn", "args": [-30]}, {"move": "run_forward", "args": [3]}],
+        [{"move": "turn", "args": [-50]}, {"move": "run_forward", "args": [5]}, {"move": "turn", "args": [-30]}, {"move": "run_forward", "args": [4]}, {"move": "turn", "args": [90]}, {"move": "run_forward", "args": [3]}, {"move": "turn", "args": [40]}, {"move": "run_forward", "args": [3]}]
+      ]},
+      "Stagnant Shadow Shape of Scorch": {"number_of_enemies": 3, "moves": [
+        [{"move": "turn", "args": [-105]}, {"move": "run_forward", "args": [8]}, {"move": "turn", "args": [70]}, {"move": "run_forward", "args": [2]}, {"move": "turn_left", "args": []}, {"move": "run_forward", "args": [2]}],
+        [{"move": "turn", "args": [-105]}, {"move": "run_forward", "args": [8]}, {"move": "turn", "args": [70]}, {"move": "run_forward", "args": [2]}, {"move": "turn_left", "args": []}, {"move": "run_forward", "args": [2]}],
+        [{"move": "turn", "args": [-105]}, {"move": "run_forward", "args": [8]}, {"move": "turn", "args": [70]}, {"move": "run_forward", "args": [2]}, {"move": "turn_right", "args": []}, {"move": "run_forward", "args": [8]}]
+      ]},
+      "Main Mine Shaft": {"number_of_enemies": 1, "moves": [
+        [{"move": "turn", "args": [-80]}, {"move": "run_forward", "args": [7]}]
+      ]}
+    },
+    "Rivet Town": {
+      "Calyx (Crimson) Bud of Erudition": {"number_of_enemies": 2, "moves": [
+        [{"move": "turn_right", "args": []}, {"move": "run_forward", "args": [4]}, {"move": "run_left", "args": [2]}, {"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [15]}, {"move": "run_right", "args": [4]}],
+        [{"move": "turn_right", "args": []}, {"move": "run_forward", "args": [4]}, {"move": "run_left", "args": [2]}, {"move":  "turn_around", "args": []}, {"move": "run_forward", "args": [15]}, {"move": "run_right", "args": [4]}]
+      ]},
+      "Stagnant Shadow Shape of Gust": {"number_of_enemies": 0, "moves": [
+        [],
+        []
+      ]},
+      "Orphanage": {"number_of_enemies": 1, "moves": [
+        [{"move":  "turn_around", "args": []}, {"move":  "run_forward", "args": [3]}, {"move":  "turn_right", "args": []}, {"move":  "run_forward", "args": [6]}]
+      ]}
+    },
+    "Robot Settlement": {
+      "Calyx (Crimson) Bud of Harmony": {"number_of_enemies": 1, "moves": [
+        []
+      ]},
+      "Energy Conversion Station": {"number_of_enemies": 4, "moves": [
+        [{"move":  "turn", "args": [140]}, {"move":  "run_forward", "args": [10]}],
+        [{"move":  "turn", "args": [140]}, {"move":  "run_forward", "args": [5]}, {"move":  "turn", "args": [90]}, {"move":  "run_forward", "args": [25]}],
+        [{"move":  "turn", "args": [140]}, {"move":  "run_forward", "args": [5]}, {"move":  "turn", "args": [90]}, {"move":  "run_forward", "args": [18]}, {"move":  "turn", "args": [-90]}],
+        [{"move":  "turn", "args": [140]}, {"move":  "run_forward", "args": [5]}, {"move":  "turn", "args": [90]}, {"move":  "run_forward", "args": [18]}, {"move":  "turn", "args": [-90]}, {"move":  "run_forward", "args": [5]}, {"move":  "turn", "args": [-90]}]
+      ]}
+    }
+  }
+
+
+}

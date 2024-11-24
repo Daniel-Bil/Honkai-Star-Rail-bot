@@ -1,0 +1,29 @@
+{
+  "Herta": {
+    "0": "eliminator",
+    "1": "disruptor",
+    "2": "reaver",
+    "3": "antibaryon",
+    "4": "trampler"
+  },
+  "JariloVI": {
+    "0": "Automaton Spider",
+    "1": "Vagrant",
+    "2": "Automaton Beetle",
+    "3": "Automaton Hound",
+    "4": "Everwinter Shadewalker",
+    "5": "Flamespawn",
+    "6": "Frostspawn",
+    "7": "Imaginary Weaver",
+    "8": "Incineration Shadewalker",
+    "9": "Mask of No Thought",
+    "10": "Silvermane Cannoneer",
+    "11": "Silvermane Gunner",
+    "12": "Windspawn",
+    "13": "teleport",
+    "14": "ice statue"
+  },
+  "Xianzhou": {
+
+  }
+}
