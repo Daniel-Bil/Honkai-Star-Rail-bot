@@ -10,3 +10,5 @@ __pycache__/
 
 #yolo5
 yolov5/
+model/
+gathered_data/
