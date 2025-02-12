@@ -1,0 +1,12 @@
+# Virtual environment
+venv/
+env/
+
+# Python-related
+*.pyc
+*.pyo
+*.log
+__pycache__/
+
+#yolo5
+yolov5/
